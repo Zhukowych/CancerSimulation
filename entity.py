@@ -1,7 +1,6 @@
 """Entities"""
-import random
+from random import random, choice
 from cell import Cell
-
 
 class Entity:
     """Entity"""
@@ -25,7 +24,7 @@ class Entity:
         if not free_neighbor:
             return
 
-        cell = random.choice(free_neighbor)
+        cell = choice(free_neighbor)
         self.move_to(cell)
 
     def get_free_neighbor(self) -> Cell:
@@ -37,24 +36,93 @@ class BiologicalCell(Entity):
     """Biological cell"""
     ID = 1
 
+    def __init__(self, proliferation_potential=15, *args, **kwargs) -> None:
+        """Initialize Biological cell"""
+        super().__init__(*args, **kwargs)
+
+        self.proliferation_potential = proliferation_potential
+
     @property
     def apotisis_probability(self) -> float:
         """Return probability of spontaneous death"""
-        return 0
+        return 0.001
 
     @property
     def proliferation_probability(self) -> float:
         """Return probability of proliferation"""
-        return 0
+        return 0.047
 
     @property
     def migration_probability(self) -> float:
         """Return probability of migration"""
-        return 1
+        return 0.1
 
     def next_state(self) -> None:
         """Next state implementation to BiologicalCell"""
-        self.move_to_random()
+        apotisis, proliferation, migration = random(), random(), random()
+
+        if apotisis <= self.apotisis_probability:
+            self.apotose()
+            return
+
+        if proliferation <= self.proliferation_probability:
+            self.proliferate()
+
+        if migration <= self.migration_probability:
+            self.move_to_random()
+
+    def proliferate(self) -> None:
+        """Proliferate"""
+        free_neighbors = self.get_free_neighbor()
+
+        if not free_neighbors:
+            return
+
+        free_cell = choice(free_neighbors)
+
+        if not self.proliferation_potential:
+            self.apotose()
+            return
+
+        new_biological_cell = BiologicalCell(self.proliferation_potential - 1)
+        free_cell.entity = new_biological_cell
+
+    def apotose(self) -> None:
+        """Cell death"""
+        self.cell.entity = None
+        
+class RTCCell(BiologicalCell):
+    """
+    Regular tumor cell
+    """
+
+    @property
+    def apotisis_probability(self) -> float:
+        """Return probability of spontaneous death"""
+        return 0.001
+
+    @property
+    def proliferation_probability(self) -> float:
+        """Return probability of proliferation"""
+        return 0.041
+
+    @property
+    def migration_probability(self) -> float:
+        """Return probability of migration"""
+        return 0.12
 
 
-class Tumor
+class ClonogenicStemCell(BiologicalCell):
+    """
+    Clonogenic stem cell. 
+    Stem cell that is immortal, but can not give 
+    birth to other stem cells
+    """
+
+
+class TrueStemCell(BiologicalCell):
+    """
+    True Stem cell. 
+    Cell that is immortal and can give birth to either
+    RTC or other True stem cell
+    """
