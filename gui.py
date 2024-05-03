@@ -14,9 +14,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 from PySide6.QtCore import QTimer
-from time import sleep
-
-from random import randint
+from time import perf_counter
 
 
 class SidebarWidget(QWidget):
@@ -41,21 +39,20 @@ class SidebarWidget(QWidget):
 
 
 class GridWidget(QWidget):
-    def __init__(self):
+    def __init__(self, automaton):
         super().__init__()
         self.setStyleSheet("background-color: black;")
+        self.automaton = automaton
         self.grid = []
         # self.setFixedSize(500, 500)
 
         self.layout = QGridLayout()
         self.layout.setSpacing(0)
 
-        board_size = 100
-
-        for row in range(board_size):
+        for row in range(self.automaton.grid.height):
             new_row = []
             self.grid.append(new_row)
-            for col in range(board_size):
+            for col in range(self.automaton.grid.width):
 
                 label = QLabel()
                 new_row.append(label)
@@ -65,16 +62,21 @@ class GridWidget(QWidget):
         self.setLayout(self.layout)
 
     def render_colors(self):
-        print("I want to listen to music")
-        for i in range(100):
-            for j in range(100):
+        start = perf_counter()
+        for i in range(self.automaton.grid.height):
+            for j in range(self.automaton.grid.width):
                 self.grid[i][j].setStyleSheet(
-                    f"background-color: rgb({randint(0,255)},{randint(0,255)},{randint(0,255)});"
+                    f"background-color: {self.automaton.grid.grid[i][j].color};"
                 )
+        print("render:", perf_counter() - start)
+
+        start = perf_counter()
+        self.automaton.next()
+        print("simulation:", perf_counter() - start)
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, height: int, width: int):
         super().__init__()
 
         self.setWindowTitle("Main Window with Sidebar")
@@ -83,10 +85,17 @@ class MainWindow(QMainWindow):
         self.sidebar_widget = SidebarWidget()
 
         # Create content widget instance
-        self.content_widget = GridWidget()
+        cell = BiologicalCell()
+
+        grid = Grid(width, height)
+        automaton = FiniteAutomaton(grid)
+
+        grid.place_entity(cell, 2, 2)
+
+        self.content_widget = GridWidget(automaton)
 
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.content_widget.render_colors)
+        self.start_automaton()
         self.timer.start(0)  # Update every second
 
         # Create a main layout for the MainWindow
@@ -101,16 +110,15 @@ class MainWindow(QMainWindow):
         # Set the central widget for the MainWindow
         self.setCentralWidget(central_widget)
 
+    def start_automaton(self):
+        self.timer.timeout.connect(self.content_widget.render_colors)
+
 
 if __name__ == "__main__":
-    cell = BiologicalCell()
-
-    grid = Grid(1000, 1000)
-    automaton = FiniteAutomaton(grid)
-
-    grid.place_entity(cell, 20, 20)
-
     app = QApplication(sys.argv)
-    window = MainWindow()
+    window = MainWindow(100, 100)
     window.show()
+
+    # window.start_automaton(grid)
+
     sys.exit(app.exec())

@@ -1,12 +1,13 @@
 """Cell"""
 
+
 class Cell:
     """
-    Cell - entity that can contain either biological cell 
+    Cell - entity that can contain either biological cell
     or other entity
     """
 
-    def __init__(self, x: int, y: int, entity = None) -> None:
+    def __init__(self, x: int, y: int, entity=None) -> None:
         """Initialize cell"""
         self.x = x
         self.y = y
@@ -21,3 +22,9 @@ class Cell:
     def entity_id(self) -> int:
         """Return identifier of the entity"""
         return self.entity.ID if self.entity else 0
+
+    @property
+    def color(self):
+        if self.entity:
+            return self.entity.color
+        return 0, 0, 0
