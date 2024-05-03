@@ -1,33 +1,32 @@
 import time
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 from grid import Grid
 from automaton import FiniteAutomaton
-from entity import BiologicalCell
+from entity import ClonogenicStemCell, BiologicalCell
+from line_profiler import profile
 
-if __name__ == "__main__":
+@profile
+def main():
     cell = BiologicalCell()
 
-    grid = Grid(1000, 1000)
+    grid = Grid(100, 100)
     automaton = FiniteAutomaton(grid)
 
-    plt.ion()
-    plt.figure()
-    plt.show()
 
-    grid.place_entity(cell, 20, 20)
+    grid.place_entity(cell, 50, 50)
 
-    for i in range(20, 10000):
+
+    for i in range(20, 1000):
 
         if i % 100 == 0:
             print(f"Iteration: {i=}")
 
-        start = time.perf_counter()
-        data = grid.to_array()
-        plt.clf()
         automaton.next()
-        print(f"Iteration time:", time.perf_counter() - start)
-        
-        sns.heatmap(data=data, square=True, cbar=False, cbar_kws={"drawedges": True})
-        plt.pause(10e-100)
+
+
+
+
+if __name__ == "__main__":
+    start = time.perf_counter()
+    main()
+    print(f"Total time {time.perf_counter() - start}")

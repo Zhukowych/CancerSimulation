@@ -1,6 +1,7 @@
 """Finite automaton"""
+import numpy as np
 from grid import Grid
-
+from line_profiler import profile
 
 class FiniteAutomaton:
     """Finite automaton"""
@@ -9,20 +10,24 @@ class FiniteAutomaton:
         """Initialize FiniteAutomaton"""
         self.grid = grid
 
+    @profile
     def next(self) -> None:
         """Make step in automaton"""
 
-        for cell in self.grid.cells:
+        cells = self.grid.cells[:]
 
+        random_variables = np.random.rand(len(cells), 3)
+
+        for i, cell in enumerate(cells):
             if cell.empty:
                 continue
 
             entity = cell.entity
 
             entity.cell = cell
-            entity.neighbors = self.grid.get_neighbors_of(cell)
+            entity.neighbors = cell.neighbors
 
-            entity.next_state()
+            entity.next_state(*random_variables[i])
 
             entity.cell = None
             entity.neighbors = None

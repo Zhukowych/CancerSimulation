@@ -36,7 +36,7 @@ class BiologicalCell(Entity):
     """Biological cell"""
     ID = 1
 
-    def __init__(self, proliferation_potential=15, *args, **kwargs) -> None:
+    def __init__(self, proliferation_potential=10, *args, **kwargs) -> None:
         """Initialize Biological cell"""
         super().__init__(*args, **kwargs)
 
@@ -57,9 +57,9 @@ class BiologicalCell(Entity):
         """Return probability of migration"""
         return 0.1
 
-    def next_state(self) -> None:
+    def next_state(self, *random_values) -> None:
         """Next state implementation to BiologicalCell"""
-        apotisis, proliferation, migration = random(), random(), random()
+        apotisis, proliferation, migration = random_values
 
         if apotisis <= self.apotisis_probability:
             self.apotose()
@@ -84,13 +84,19 @@ class BiologicalCell(Entity):
             self.apotose()
             return
 
-        new_biological_cell = BiologicalCell(self.proliferation_potential - 1)
-        free_cell.entity = new_biological_cell
+
+        free_cell.entity = self.replicate()
+
+    def replicate(self) -> Entity:
+        """Return daughter cell"""
+        self.proliferation_potential -= 1
+        return BiologicalCell(self.proliferation_potential - 1)
 
     def apotose(self) -> None:
         """Cell death"""
         self.cell.entity = None
-        
+
+
 class RTCCell(BiologicalCell):
     """
     Regular tumor cell
@@ -111,6 +117,11 @@ class RTCCell(BiologicalCell):
         """Return probability of migration"""
         return 0.12
 
+    def replicate(self) -> Entity:
+        """Return daughter cell"""
+        self.proliferation_potential -= 1
+        return RTCCell(self.proliferation_potential - 1)
+
 
 class ClonogenicStemCell(BiologicalCell):
     """
@@ -118,7 +129,11 @@ class ClonogenicStemCell(BiologicalCell):
     Stem cell that is immortal, but can not give 
     birth to other stem cells
     """
+    ID = 2
 
+    def replicate(self) -> Entity:
+        """Return daughter cell"""
+        return RTCCell(self.proliferation_potential - 1)
 
 class TrueStemCell(BiologicalCell):
     """
@@ -126,3 +141,8 @@ class TrueStemCell(BiologicalCell):
     Cell that is immortal and can give birth to either
     RTC or other True stem cell
     """
+    ID = 3
+
+    def replicate(self) -> Entity:
+        """Return daughter cell"""
+        return TrueStemCell(self.proliferation_potential)

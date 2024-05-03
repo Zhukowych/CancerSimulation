@@ -13,15 +13,29 @@ class Grid:
         self.width = width
         self.height = height
 
-        self.filled_cells = []
+        self.active_cells = []
         self.grid = [ [Cell(x, y) for x in range(width)]
                        for y in range(height) ]
+
+
+        for row in self.grid:
+            for cell in row:
+                cell.add_entity_callback = lambda c: self.add_active_cell(c)
+                cell.remove_entity_callback = lambda c: self.remove_active_cell(c)
+                cell.neighbors = self.get_neighbors_of(cell)
 
     @property
     def cells(self) -> Iterable:
         """Return all cells iterator"""
-        return iter(cell for row in self.grid
-                         for cell in row)
+        return self.active_cells
+
+    def add_active_cell(self, cell: Cell) -> None:
+        """Add active cell"""
+        self.active_cells.append(cell)
+
+    def remove_active_cell(self, cell: Cell) -> None:
+        """Add active cell"""
+        self.active_cells.remove(cell)
 
     def place_entity(self, entity: Entity, x: int, y: int) -> None:
         """Place entity on grid by coordinates"""
@@ -29,6 +43,7 @@ class Grid:
             raise ValueError("You cannot put an entity outside the boundaries")
 
         self.grid[y][x].entity = entity
+        self.add_active_cell(self.grid[y][x])
 
     def to_array(self) -> list[list[int]]:
         """
