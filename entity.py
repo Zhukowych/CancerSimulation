@@ -1,6 +1,8 @@
 """Entities"""
+
 from random import random, choice
 from cell import Cell
+
 
 class Entity:
     """Entity"""
@@ -34,6 +36,7 @@ class Entity:
 
 class BiologicalCell(Entity):
     """Biological cell"""
+
     ID = 1
 
     def __init__(self, proliferation_potential=10, *args, **kwargs) -> None:
@@ -96,6 +99,10 @@ class BiologicalCell(Entity):
         """Cell death"""
         self.cell.entity = None
 
+    @property
+    def color(self) -> tuple[int, int, int]:
+        return (255, 255, 255)
+
 
 class RTCCell(BiologicalCell):
     """
@@ -122,11 +129,15 @@ class RTCCell(BiologicalCell):
         self.proliferation_potential -= 1
         return RTCCell(self.proliferation_potential - 1)
 
+    @property
+    def color(self):
+        return (255, 0, 0)
+
 
 class ClonogenicStemCell(BiologicalCell):
     """
-    Clonogenic stem cell. 
-    Stem cell that is immortal, but can not give 
+    Clonogenic stem cell.
+    Stem cell that is immortal, but can not give
     birth to other stem cells
     """
     ID = 2
@@ -137,7 +148,7 @@ class ClonogenicStemCell(BiologicalCell):
 
 class TrueStemCell(BiologicalCell):
     """
-    True Stem cell. 
+    True Stem cell.
     Cell that is immortal and can give birth to either
     RTC or other True stem cell
     """
