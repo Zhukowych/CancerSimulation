@@ -6,6 +6,12 @@ class Cell:
     Cell - entity that can contain either biological cell
     or other entity
     """
+    __dict__ = ['x',
+                'y',
+                '_entity',
+                'neighbors',
+                'add_entity_callback', 
+                'remove_entity_callback']
 
     def __init__(self, x: int, y: int, entity=None) -> None:
         """Initialize cell"""
@@ -47,3 +53,8 @@ class Cell:
         if self.entity:
             return self.entity.color
         return 0, 0, 0
+
+    def get_free_neighbor(self):
+        """Return empty cell"""
+        return [cell for cell in self.neighbors if cell.empty]
+ 

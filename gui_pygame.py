@@ -16,25 +16,26 @@ class MainWindow:
 
         cell = BiologicalCell()
 
-        grid = Grid(width, height)
-        self.automaton = FiniteAutomaton(grid)
+        self.grid = Grid(width, height)
+        self.automaton = FiniteAutomaton(self.grid)
 
-        grid.place_entity(cell, 2, 2)
+        self.grid.place_entity(cell, 2, 2)
 
     def render(self, screen_):
-        for i in range(self.height):
-            for j in range(self.width):
-                cell_rect = pygame.Rect(
-                    i * self.block_size,
-                    j * self.block_size,
-                    self.block_size,
-                    self.block_size,
-                )
-                pygame.draw.rect(
-                    screen_, self.automaton.grid.grid[i][j].color, cell_rect
-                )
+        for cell in self.grid.cells:
+            cell_rect = pygame.Rect(
+                cell.x * self.block_size,
+                cell.y * self.block_size,
+                self.block_size,
+                self.block_size,
+            )
+            pygame.draw.rect(
+                screen_, cell.color, cell_rect
+            )
 
+        start = perf_counter()  
         self.automaton.next()
+        print("Automaton step:", perf_counter() - start, len(self.grid.cells))
 
 
 if __name__ == "__main__":
@@ -43,7 +44,7 @@ if __name__ == "__main__":
     screen = pygame.display.set_mode((1000, 1000))
     clock = pygame.time.Clock()
 
-    window = MainWindow(100, 100)
+    window = MainWindow(500, 500)
 
     while True:
 
@@ -52,9 +53,9 @@ if __name__ == "__main__":
                 pygame.quit()
                 sys.exit()
 
-            start = perf_counter()
+        start = perf_counter()
 
-            window.render(screen)
-            pygame.display.update()
-            clock.tick()
-            print(perf_counter() - start)
+        window.render(screen)
+        pygame.display.update()
+        clock.tick()
+        print(perf_counter() - start)

@@ -7,10 +7,17 @@ from cell import Cell
 class Entity:
     """Entity"""
 
+    __dict__ = [
+        "cell",
+        "neighbors",
+        'free_neighbors'
+    ]
+
     def __init__(self) -> None:
         """Initialize entity"""
         self.cell = None
         self.neighbors = None
+        self.free_neighbors = None
 
     def next_state(self) -> None:
         """Mutate cell or neighbors to represent the next state"""
@@ -22,22 +29,27 @@ class Entity:
 
     def move_to_random(self) -> None:
         """Move to random free neighbor"""
-        free_neighbor = self.get_free_neighbor()
+        free_neighbor = self.free_neighbors
         if not free_neighbor:
             return
 
-        cell = choice(free_neighbor)
+        cell = free_neighbor[0]
         self.move_to(cell)
 
-    def get_free_neighbor(self) -> Cell:
-        """Return empty cell"""
-        return [cell for cell in self.neighbors if cell.empty]
-
+       
 
 class BiologicalCell(Entity):
     """Biological cell"""
 
     ID = 1
+
+    __dict__ = [
+        "ID",
+        "proliferation_potential",
+        "cell",
+        "neighbors",
+        "free_neighbors"
+    ]
 
     def __init__(self, proliferation_potential=10, *args, **kwargs) -> None:
         """Initialize Biological cell"""
@@ -76,7 +88,7 @@ class BiologicalCell(Entity):
 
     def proliferate(self) -> None:
         """Proliferate"""
-        free_neighbors = self.get_free_neighbor()
+        free_neighbors = self.free_neighbors
 
         if not free_neighbors:
             return

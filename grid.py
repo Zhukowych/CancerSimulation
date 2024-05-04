@@ -13,7 +13,7 @@ class Grid:
         self.width = width
         self.height = height
 
-        self.active_cells = []
+        self.active_cells = set()
         self.grid = [ [Cell(x, y) for x in range(width)]
                        for y in range(height) ]
 
@@ -31,7 +31,7 @@ class Grid:
 
     def add_active_cell(self, cell: Cell) -> None:
         """Add active cell"""
-        self.active_cells.append(cell)
+        self.active_cells.add(cell)
 
     def remove_active_cell(self, cell: Cell) -> None:
         """Add active cell"""

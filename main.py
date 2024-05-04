@@ -9,7 +9,7 @@ from line_profiler import profile
 def main():
     cell = BiologicalCell()
 
-    grid = Grid(100, 100)
+    grid = Grid(500, 500)
     automaton = FiniteAutomaton(grid)
 
 
@@ -19,7 +19,7 @@ def main():
     for i in range(20, 1000):
 
         if i % 100 == 0:
-            print(f"Iteration: {i=}")
+            print(f"Iteration: {i=}", "cell count", len(grid.cells))
 
         automaton.next()
 
