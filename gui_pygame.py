@@ -12,6 +12,8 @@ from constants import (
     BUTTON_HEIGHT,
     BUTTON_WIDTH,
     BUTTON_ADD,
+    BUTTON_START,
+    BUTTON_STOP,
 )
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, 1000))
@@ -21,7 +23,7 @@ simulations = []
 running_sim = False
 curr_type = 1
 
-import threading
+from threading import Thread
 
 
 class Button:
@@ -29,10 +31,10 @@ class Button:
         self.image = pygame.image.load(image).convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.topleft = x, y
+        self.clicked = False
 
     def render(self):
-        pos = pygame.mouse.get_pos()
-        if self.rect.collidepoint(pos):
+        if self.rect.collidepoint(pygame.mouse.get_pos()):
             if pygame.mouse.get_pressed()[0] == 1:
                 simulations.append(
                     Simulation(
@@ -44,6 +46,33 @@ class Button:
                 )
                 simulations[-1].render()
                 return
+
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+
+    def start_sim(self):
+        global running_sim
+
+        print(simulations, running_sim)
+
+        if self.rect.collidepoint(pygame.mouse.get_pos()):
+            if pygame.mouse.get_pressed()[0] == 1 and not self.clicked:
+
+                print("debug")
+                self.clicked = True
+                # global running_sim
+                if running_sim:
+                    self.image = pygame.image.load(BUTTON_STOP).convert_alpha()
+                else:
+                    self.image = pygame.image.load(BUTTON_START).convert_alpha()
+
+                tmp_xy = self.rect.x, self.rect.y
+                self.rect = self.image.get_rect()
+                self.rect.topleft = tmp_xy
+
+                running_sim = not running_sim
+
+        if pygame.mouse.get_pressed()[0] == 0:
+            self.clicked = False
 
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
@@ -95,7 +124,10 @@ if __name__ == "__main__":
     add_button_2 = Button(750, 200, BUTTON_ADD)
     add_button_3 = Button(200, 750, BUTTON_ADD)
     add_button_4 = Button(750, 750, BUTTON_ADD)
+    start_button = Button(1300, 200, BUTTON_START)
+
     while True:
+        tmp_threads = []
         N_SIMS = len(simulations)
         if N_SIMS < 4:
             add_button_4.render()
@@ -106,8 +138,17 @@ if __name__ == "__main__":
         if N_SIMS < 1:
             add_button_1.render()
 
+        start_button.start_sim()
+
         for sim in simulations:
             sim.render()
+            if running_sim:
+                tmp_threads.append(new_thr := Thread(target=sim.automaton.next))
+                new_thr.start()
+
+        if running_sim:
+            for thr in tmp_threads:
+                thr.join()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
