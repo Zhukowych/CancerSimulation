@@ -7,11 +7,7 @@ from cell import Cell
 class Entity:
     """Entity"""
 
-    __dict__ = [
-        "cell",
-        "neighbors",
-        'free_neighbors'
-    ]
+    __dict__ = ["cell", "neighbors", "free_neighbors"]
 
     def __init__(self) -> None:
         """Initialize entity"""
@@ -36,20 +32,13 @@ class Entity:
         cell = free_neighbor[0]
         self.move_to(cell)
 
-       
 
 class BiologicalCell(Entity):
     """Biological cell"""
 
     ID = 1
 
-    __dict__ = [
-        "ID",
-        "proliferation_potential",
-        "cell",
-        "neighbors",
-        "free_neighbors"
-    ]
+    __dict__ = ["ID", "proliferation_potential", "cell", "neighbors", "free_neighbors"]
 
     def __init__(self, proliferation_potential=10, *args, **kwargs) -> None:
         """Initialize Biological cell"""
@@ -98,7 +87,6 @@ class BiologicalCell(Entity):
         if not self.proliferation_potential:
             self.apotose()
             return
-
 
         free_cell.entity = self.replicate()
 
@@ -152,11 +140,17 @@ class ClonogenicStemCell(BiologicalCell):
     Stem cell that is immortal, but can not give
     birth to other stem cells
     """
+
     ID = 2
 
     def replicate(self) -> Entity:
         """Return daughter cell"""
         return RTCCell(self.proliferation_potential - 1)
+
+    @property
+    def color(self):
+        return (255, 255, 51)
+
 
 class TrueStemCell(BiologicalCell):
     """
@@ -164,8 +158,13 @@ class TrueStemCell(BiologicalCell):
     Cell that is immortal and can give birth to either
     RTC or other True stem cell
     """
+
     ID = 3
 
     def replicate(self) -> Entity:
         """Return daughter cell"""
         return TrueStemCell(self.proliferation_potential)
+
+    @property
+    def color(self):
+        return (255, 51, 255)

@@ -1,1 +1,10 @@
 """global constants"""
+
+SCREEN_HEIGHT = 1080
+SCREEN_WIDTH = 1920
+
+BUTTON_HEIGHT = 100
+BUTTON_WIDTH = 100
+BUTTON_ADD = "./assets/icons8-add-100.png"
+
+BLOCK_SIZE_DIVISIBLE = 500
