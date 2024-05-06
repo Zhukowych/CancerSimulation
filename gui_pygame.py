@@ -50,16 +50,11 @@ class Button:
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
     def start_sim(self):
-        global running_sim
-
-        print(simulations, running_sim)
 
         if self.rect.collidepoint(pygame.mouse.get_pos()):
             if pygame.mouse.get_pressed()[0] == 1 and not self.clicked:
-
-                print("debug")
                 self.clicked = True
-                # global running_sim
+                global running_sim
                 if running_sim:
                     self.image = pygame.image.load(BUTTON_STOP).convert_alpha()
                 else:
@@ -90,8 +85,6 @@ class Simulation:
     def render(self):
 
         pos = pygame.mouse.get_pos()
-
-        # print(pos)
 
         if pygame.mouse.get_pressed()[0]:
             if (
@@ -160,4 +153,3 @@ if __name__ == "__main__":
         pygame.display.update()
         # pygame.display.flip()
         clock.tick()
-        # print("render:", perf_counter() - start)
