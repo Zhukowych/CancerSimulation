@@ -3,16 +3,17 @@ import numba
 import threading
 import numpy as np
 from grid import Grid
-
+from variables import Variables
 from concurrent.futures import ThreadPoolExecutor
 
 
 class FiniteAutomaton:
     """Finite automaton"""
 
-    def __init__(self, grid: Grid) -> None:
+    def __init__(self, grid: Grid, variables: Variables) -> None:
         """Initialize FiniteAutomaton"""
         self.grid = grid
+        self.variables = variables
 
     def next(self) -> None:
         """Make step in automaton"""

@@ -3,7 +3,7 @@ import sys
 
 from grid import Grid
 from automaton import FiniteAutomaton
-from entity import BiologicalCell
+from entity import BiologicalCell, TrueStemCell
 
 from time import perf_counter
 
@@ -14,14 +14,15 @@ class MainWindow:
         self.width = width
         self.block_size = int(1000 / height)
 
-        cell = BiologicalCell()
+        cell = TrueStemCell()
 
         self.grid = Grid(width, height)
         self.automaton = FiniteAutomaton(self.grid)
 
-        self.grid.place_entity(cell, 2, 2)
+        self.grid.place_entity(cell, 200, 200)
 
     def render(self, screen_):
+        screen_.fill((255, 255, 255))
         for cell in self.grid.cells:
             cell_rect = pygame.Rect(
                 cell.x * self.block_size,
@@ -33,9 +34,7 @@ class MainWindow:
                 screen_, cell.color, cell_rect
             )
 
-        start = perf_counter()  
         self.automaton.next()
-        print("Automaton step:", perf_counter() - start, len(self.grid.cells))
 
 
 if __name__ == "__main__":
@@ -53,9 +52,6 @@ if __name__ == "__main__":
                 pygame.quit()
                 sys.exit()
 
-        start = perf_counter()
-
         window.render(screen)
         pygame.display.update()
         clock.tick()
-        print(perf_counter() - start)
