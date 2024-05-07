@@ -101,6 +101,7 @@ class BiologicalCell(Entity):
 
     @property
     def color(self) -> tuple[int, int, int]:
+        # return "#fff"
         return (255, 255, 255)
 
 
@@ -132,6 +133,7 @@ class RTCCell(BiologicalCell):
     @property
     def color(self):
         return (255, 0, 0)
+        # return "#ffffff"
 
 
 class ClonogenicStemCell(BiologicalCell):
