@@ -26,7 +26,7 @@ from constants import (
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 
-running_sim = Value("b", 0)
+running_sim = Value("i", 0)
 
 
 class Simulation:
@@ -116,8 +116,6 @@ if __name__ == "__main__":
         )
         new_process.start()
 
-    print("completed")
-
     while True:
         for sim in simulations:
             sim.draw()
@@ -133,8 +131,5 @@ if __name__ == "__main__":
             if event.type == pygame.KEYDOWN and event.key == pygame.K_s:
                 running_sim.value = (running_sim.value + 1) % 2
 
-        # start = perf_counter()
-
         pygame.display.update()
-        # pygame.display.flip()
         clock.tick()
