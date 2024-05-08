@@ -9,7 +9,8 @@ import pygame
 
 from grid import Grid
 from automaton import FiniteAutomaton
-from entity import BiologicalCell, RTCCell, ClonogenicStemCell, TrueStemCell
+from entity import TrueStemCell, ImmuneCell, BiologicalCell
+from variables import Variables
 
 from constants import (
     SCREEN_HEIGHT,

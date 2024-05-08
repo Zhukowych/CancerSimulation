@@ -22,9 +22,17 @@ class Cell:
         self.y = y
         self._entity = entity
         self.neighbors = []
+        self.distance = 0
+        self.phi = 0
 
         self.add_entity_callback = None
         self.remove_entity_callback = None
+
+    def __hash__(self):
+        return hash((self.x, self.y))
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
 
     @property
     def entity(self):
