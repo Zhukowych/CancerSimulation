@@ -1,7 +1,11 @@
-import pygame
-import sys
+"""
+Super pygame visualisation with multiprocessing backed up with rust, C and C++ at the same time.
+"""
 
-sys.setrecursionlimit(10**6)
+from multiprocessing import Process, Queue, Value
+import sys
+import pygame
+
 
 from grid import Grid
 from automaton import FiniteAutomaton
@@ -18,30 +22,24 @@ from constants import (
     BUTTON_STOP,
 )
 
-from multiprocessing import Pool
-import concurrent.futures
-from collections import deque
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 
-simulations = []
-running_sim = False
-curr_type = 1
+running_sim = Value("b", 0)
 
 
 class Simulation:
-
-    def __init__(self, x: int, y: int, height: int, width: int):
+    def __init__(self, x: int, y: int, height=500, width=500, start_x=200, start_y=200):
         self.x = x
         self.y = y
         self.height = height
         self.width = width
         self.block_size = BLOCK_SIZE_DIVISIBLE / height
         self.automaton = FiniteAutomaton(Grid(width, height))
-        self.automaton.grid.place_entity(BiologicalCell(), 10, 10)
+        self.automaton.grid.place_entity(BiologicalCell(), start_x, start_y)
 
-        self.queue = deque()
+        self.queue = Queue()
 
         for row in range(self.height):
             pygame.draw.rect(
@@ -69,40 +67,29 @@ class Simulation:
         self.x += 1
         self.y += 1
 
-    def calc_steps(self, amount: int):
-        for _ in range(amount):
-            self.automaton.next()
-            self.queue.append(self.automaton.grid.cells)
-
     def draw(self):
-
-        if len(self.queue) == 0:
+        if self.queue.empty() or not running_sim.value:
             return
 
-        for cell in self.queue.popleft():
+        for x, y, color in self.queue.get():
             pygame.draw.rect(
                 screen,
-                cell.entity.color,
+                color,
                 pygame.Rect(
-                    self.x + cell.x * self.block_size,
-                    self.y + cell.y * self.block_size,
+                    self.x + x * self.block_size,
+                    self.y + y * self.block_size,
                     self.block_size,
                     self.block_size,
                 ),
             )
 
-        # self.automaton.next()
 
-
-def step_calculator(sim):
-    print("smth")
-    for i in range(100):
-        print(i)
-    for _ in range(100):
-        print(sim.queue)
-        sim.automaton.next()
-        sim.queue.append(sim.automaton.grid.cells)
-        print(sim.queue)
+def step_calculator(queue, active, *args):
+    sim_ = Simulation(*args)
+    while True:
+        if queue.empty() and active.value:
+            sim_.automaton.next()
+            queue.put(sim_.automaton.grid.coloured_cells)
 
 
 if __name__ == "__main__":
@@ -110,18 +97,26 @@ if __name__ == "__main__":
 
     simulations = [
         Simulation(10, 10, 500, 500),
-        # Simulation(550, 10, 500, 500),
-        # Simulation(10, 550, 500, 500),
-        # Simulation(550, 550, 500, 500),
+        Simulation(550, 10, 500, 500, 50, 50),
+        Simulation(10, 550, 500, 500, 400, 400),
+        Simulation(550, 550, 500, 500, 250, 490),
     ]
 
-    with Pool() as pool:
-        res = pool.imap(step_calculator, simulations)
+    processes = []
+    simulations_coords = [
+        (10, 10, 500, 500, 250, 250),
+        (550, 10, 500, 500, 50, 50),
+        (10, 550, 500, 500, 400, 400),
+        (550, 550, 500, 500, 250, 490),
+    ]
 
-        for piece_of_shit in res:
-            print(piece_of_shit)
-    # with concurrent.futures.ThreadPoolExecutor() as executor:
-    # executor.submit(step_calculator, simulations)
+    for sim, coords in zip(simulations, simulations_coords):
+        new_process = Process(
+            target=step_calculator, args=(sim.queue, running_sim) + coords
+        )
+        new_process.start()
+
+    print("completed")
 
     while True:
         for sim in simulations:
@@ -130,14 +125,13 @@ if __name__ == "__main__":
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-
-                # for sim in simulations:
-                # sim.procces.join()
+                for sim in simulations:
+                    sim.join()
                 pygame.quit()
                 sys.exit()
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_s:
-                running_sim = not running_sim
+                running_sim.value = (running_sim.value + 1) % 2
 
         # start = perf_counter()
 
