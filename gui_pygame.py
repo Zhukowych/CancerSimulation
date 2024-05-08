@@ -122,6 +122,25 @@ def render_fps(x: int, y: int, fps_num: int):
     )
 
 
+def render_sim_status(x: int, y: int):
+    pygame.draw.rect(
+        screen,
+        (255, 255, 255),
+        pygame.Rect(x, y, 300, 400),
+    )
+
+    if running_sim.value:
+        screen.blit(
+            text_font.render("Running", False, (0, 255, 0)),
+            (x, y),
+        )
+    else:
+        screen.blit(
+            text_font.render("Stopped", False, (255, 0, 0)),
+            (x, y),
+        )
+
+
 def step_calculator(queue, active, start_x, start_y):
     automaton = FiniteAutomaton(Grid(500, 500), Variables())
     automaton.grid.place_entity(TrueStemCell(), start_x, start_y)
@@ -173,3 +192,4 @@ if __name__ == "__main__":
         pygame.display.update()
         clock.tick()
         render_fps(1700, 100, int(clock.get_fps()))
+        render_sim_status(1700, 900)
