@@ -85,7 +85,6 @@ class FiniteAutomaton:
         if counter.immune_cell >= 1000:
             return
 
-        print("debug", recrutient)
         for _ in range(int(recrutient)):
             free_cell = self.grid.get_random_free_cell()
             free_cell.entity = ImmuneCell()
