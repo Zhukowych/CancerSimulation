@@ -26,8 +26,8 @@ class Grid:
                 cell.add_entity_callback = lambda c: self.add_active_cell(c)
                 cell.remove_entity_callback = lambda c: self.remove_active_cell(c)
                 cell.neighbors = self.get_neighbors_of(cell)
-                cell.distance = sqrt( (cell.x - cx) ** 2 + (cell.y - cy) ** 2 )
-                cell.phi = np.arctan2(cell.y-cy, cell.x-cx)
+                cell.distance = sqrt((cell.x - cx) ** 2 + (cell.y - cy) ** 2)
+                cell.phi = np.arctan2(cell.y - cy, cell.x - cx)
 
     @property
     def center(self) -> tuple[int, int]:

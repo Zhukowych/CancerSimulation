@@ -27,6 +27,9 @@ from constants import (
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 
+screen.fill((255, 255, 255))
+pygame.display.flip()
+
 running_sim = Value("i", 0)
 
 
@@ -37,31 +40,29 @@ class Simulation:
         self.height = height
         self.width = width
         self.block_size = BLOCK_SIZE_DIVISIBLE / height
-        self.automaton = FiniteAutomaton(Grid(width, height))
-        self.automaton.grid.place_entity(BiologicalCell(), start_x, start_y)
 
         self.queue = Queue()
 
         for row in range(self.height):
             pygame.draw.rect(
                 screen,
-                (178, 190, 181),
+                (0, 0, 0),
                 pygame.Rect(self.x, self.y + row, 1, 1),
             )
             pygame.draw.rect(
                 screen,
-                (178, 190, 181),
+                (0, 0, 0),
                 pygame.Rect(self.x + self.width + 1, self.y + row, 1, 1),
             )
         for col in range(self.height):
             pygame.draw.rect(
                 screen,
-                (178, 190, 181),
+                (0, 0, 0),
                 pygame.Rect(self.x + col, self.y, 1, 1),
             )
             pygame.draw.rect(
                 screen,
-                (178, 190, 181),
+                (0, 0, 0),
                 pygame.Rect(self.x + col, self.y + self.height + 1, 1, 1),
             )
 
@@ -85,12 +86,15 @@ class Simulation:
             )
 
 
-def step_calculator(queue, active, *args):
-    sim_ = Simulation(*args)
+def step_calculator(queue, active, start_x, start_y):
+    # sim_ = Simulation(0, 0)
+    automaton = FiniteAutomaton(Grid(500, 500), Variables())
+    automaton.grid.place_entity(TrueStemCell(), start_x, start_y)
+    automaton.grid.place_entity(ImmuneCell(), 1, 1)
     while True:
         if queue.empty() and active.value:
-            sim_.automaton.next()
-            queue.put(sim_.automaton.grid.coloured_cells)
+            automaton.next()
+            queue.put(automaton.grid.coloured_cells)
 
 
 if __name__ == "__main__":
@@ -104,23 +108,22 @@ if __name__ == "__main__":
     ]
 
     processes = []
-    simulations_coords = [
-        (10, 10, 500, 500, 250, 250),
-        (550, 10, 500, 500, 50, 50),
-        (10, 550, 500, 500, 400, 400),
-        (550, 550, 500, 500, 250, 490),
-    ]
+    # simulations_coords = [
+    # (10, 10, 500, 500, 250, 250),
+    # (550, 10, 500, 500, 50, 50),
+    # (10, 550, 500, 500, 400, 400),
+    # (550, 550, 500, 500, 250, 490),
+    # ]
 
-    for sim, coords in zip(simulations, simulations_coords):
+    for sim in simulations:
         new_process = Process(
-            target=step_calculator, args=(sim.queue, running_sim) + coords
+            target=step_calculator, args=(sim.queue, running_sim, 250, 250)
         )
         new_process.start()
 
     while True:
         for sim in simulations:
             sim.draw()
-            # sim.render_step()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
