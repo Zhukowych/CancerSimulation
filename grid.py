@@ -1,5 +1,8 @@
 """Grid and cell"""
 from typing import Iterable
+import numpy as np
+from random import randint
+from math import sqrt
 from cell import Cell
 from entity import Entity
 
@@ -20,9 +23,17 @@ class Grid:
 
         for row in self.grid:
             for cell in row:
+                cx, cy = self.center
                 cell.add_entity_callback = lambda c: self.add_active_cell(c)
                 cell.remove_entity_callback = lambda c: self.remove_active_cell(c)
                 cell.neighbors = self.get_neighbors_of(cell)
+                cell.distance = sqrt( (cell.x - cx) ** 2 + (cell.y - cy) ** 2 )
+                cell.phi = np.arctan2(cell.y-cy, cell.x-cx)
+
+    @property
+    def center(self) -> tuple[int, int]:
+        """Return coordinate of center"""
+        return (self.width // 2, self.height // 2)
 
     @property
     def cells(self) -> Iterable:
@@ -69,3 +80,10 @@ class Grid:
                 neighbors.append(self.grid[y][x])
 
         return neighbors
+
+    def get_random_free_cell(self) -> Cell:
+        """Return random free cell"""
+        x, y = randint(0, self.width - 1), randint(0, self.height - 1)
+        while not self.grid[x][y].empty:
+            x, y = randint(0, self.width - 1), randint(0, self.height - 1)
+        return self.grid[x][y]

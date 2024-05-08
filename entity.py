@@ -1,5 +1,6 @@
 """Entities"""
 import numpy as np
+from variables import Variables
 from random import random, choice
 from cell import Cell
 
@@ -32,7 +33,7 @@ class Entity:
         free_neighbor = self.free_neighbors
 
         if not self.cell.entity: # cell has died
-            return 
+            return
 
         if not free_neighbor:
             return
@@ -42,7 +43,7 @@ class Entity:
 
 
 
-MAX_PROLIFERATION_POTENTIAL = 20
+MAX_PROLIFERATION_POTENTIAL = 30
 MAX_PROLIFERATION_COLOR = np.array([250,0,0])
 LOW_PROLIFERATION_COLOR = np.array([0, 0, 0])
 
@@ -67,11 +68,12 @@ class BiologicalCell(Entity):
         super().__init__(*args, **kwargs)
 
         self.proliferation_potential = proliferation_potential
+        self.energy_level = 0
 
     @property
     def apotisis_probability(self) -> float:
         """Return probability of spontaneous death"""
-        return 0.001
+        return 0
 
     @property
     def proliferation_probability(self) -> float:
@@ -81,7 +83,7 @@ class BiologicalCell(Entity):
     @property
     def migration_probability(self) -> float:
         """Return probability of migration"""
-        return 0.4
+        return 0.8
 
     def next_state(self, *random_values) -> None:
         """Next state implementation to BiologicalCell"""
@@ -127,50 +129,70 @@ class BiologicalCell(Entity):
         return int(r), int(g), int(b)
 
 
-
 class CancerCell(BiologicalCell):
     """Cancer cell"""
 
-    def next_state(self, *random_values) -> None:
-        apotisis, proliferation, migration = random_values
+    def __init__(self, proliferation_potential=MAX_PROLIFERATION_POTENTIAL, 
+                 *args, **kwargs) -> None:
+        super().__init__(proliferation_potential, *args, **kwargs)
 
-        if apotisis <= self.apotisis_probability or self.proliferation_potential == 0:
+    def next_state(self, variables: Variables, *random_variables) -> None:
+        apotosis, proliferation, migration, *_ = random_variables
+
+        br = variables.p0 * (1 - (self.cell.distance / (variables.Rmax - variables.Kc) ))
+
+        if apotosis <= self.apotisis_probability:
             self.apotose()
             return
 
-        if proliferation <= self.proliferation_probability:
+        if proliferation <= br:
             self.proliferate()
 
         if migration <= self.migration_probability:
             self.move_to_random()
-        
 
+        if self.energy_level <= variables.necrotic_energy_level:
+            self.cell.entity = NecroticCell()
 
-
-class RTCCell(CancerCell):
-    """
-    Regular tumor cell
-    """
-
-    @property
-    def apotisis_probability(self) -> float:
-        """Return probability of spontaneous death"""
-        return 0.001
-
-    @property
-    def proliferation_probability(self) -> float:
-        """Return probability of proliferation"""
-        return 0.041
-
-    @property
-    def migration_probability(self) -> float:
-        """Return probability of migration"""
-        return 0.12
 
     def replicate(self) -> Entity:
         """Return daughter cell"""
+        daughter =  CancerCell(self.proliferation_potential - 1)
         self.proliferation_potential -= 1
-        return RTCCell(self.proliferation_potential - 1)
+        return daughter
+
+    @property
+    def color(self) -> tuple[int, int, int]:
+        r, g, b =  LOW_PROLIFERATION_COLOR + self.proliferation_potential * DELTA
+        return int(r), int(g), int(b)
+
+
+
+class QuiescentCell(BiologicalCell):
+    """Quiescent cell"""
+
+    def next_state(self, variables: Variables, *random_variables) -> None:
+        
+        if self.distance_from_edge < variables.Wp or self.free_neighbors:
+            self.cell.entity = CancerCell()
+
+        if self.cell.distance < variables.Rn:
+            self.cell.entity = NecroticCell()
+
+    @property
+    def color(self):
+        return (219, 134, 134)
+
+
+class NecroticCell(BiologicalCell):
+    """Necrotic cell"""
+
+    def next_state(self, variables: Variables, *random_variables) -> None:
+        pass
+
+    @property
+    def color(self):
+        return (133, 21, 21)
 
 
 class TrueStemCell(CancerCell):
@@ -189,12 +211,55 @@ class TrueStemCell(CancerCell):
     def replicate(self) -> Entity:
         """Return daughter cell"""
         new_stem_chance = random()
-        if new_stem_chance <= 0.3:
+        if new_stem_chance <= 0.4:
             daughter = TrueStemCell(self.proliferation_potential)
         else:
-            daughter =  RTCCell(self.proliferation_potential - 1)
+            daughter =  CancerCell(self.proliferation_potential)
         return daughter
 
     @property
     def color(self):
         return 255, 238, 0
+
+
+class ImmuneCell(BiologicalCell):
+    """Immune cell"""
+
+    def next_state(self, variables: Variables, *random_values) -> None:
+        *_, cancer_cell_death_probability, immune_cell_death_probability = random_values
+
+        self.move_to_random(immune_cell_death_probability)
+
+        for neighbor in self.neighbors:
+            if neighbor.empty:
+                continue
+
+            if isinstance(neighbor.entity, CancerCell):
+                if cancer_cell_death_probability <= variables.pdT:
+                    neighbor.entity = None
+
+                if immune_cell_death_probability <= variables.pdI:
+                    self.apotose()
+
+                break
+
+    def move_to_random(self, direction_probability) -> None:
+        """Move to random free neighbor"""
+
+        if direction_probability <= 0.2:
+            free_neighbor = sorted(self.free_neighbors, key=lambda c: c.distance)[:3]
+        else:
+            free_neighbor = sorted(self.free_neighbors, key=lambda c: c.distance)
+
+        if not self.cell.entity: # cell has died
+            return
+
+        if not free_neighbor:
+            return
+
+        cell = choice(free_neighbor)
+        self.move_to(cell)
+
+    @property
+    def color(self):
+        return 245, 91, 209

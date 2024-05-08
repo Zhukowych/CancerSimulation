@@ -19,6 +19,8 @@ class Cell:
         self.y = y
         self._entity = entity
         self.neighbors = []
+        self.distance = 0
+        self.phi = 0
 
         self.add_entity_callback = None
         self.remove_entity_callback = None
@@ -38,7 +40,7 @@ class Cell:
     def entity(self, entity_) -> None:
         if self.empty and entity_ is not None:
             self.add_entity_callback(self)
-        
+
         if entity_ is None and not self.empty:
             self.remove_entity_callback(self)
 
@@ -63,4 +65,3 @@ class Cell:
     def get_free_neighbor(self):
         """Return empty cell"""
         return [cell for cell in self.neighbors if cell.empty]
- 

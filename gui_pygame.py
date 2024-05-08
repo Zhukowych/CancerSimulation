@@ -3,7 +3,8 @@ import sys
 
 from grid import Grid
 from automaton import FiniteAutomaton
-from entity import BiologicalCell, TrueStemCell
+from entity import TrueStemCell, ImmuneCell
+from variables import Variables
 
 from time import perf_counter
 
@@ -14,12 +15,17 @@ class MainWindow:
         self.width = width
         self.block_size = int(1000 / height)
 
+        immune_cell = ImmuneCell()
         cell = TrueStemCell()
+        cell.energy_level = 50
 
         self.grid = Grid(width, height)
-        self.automaton = FiniteAutomaton(self.grid)
+        self.variables = Variables()
+        
+        self.automaton = FiniteAutomaton(self.grid, self.variables)
 
-        self.grid.place_entity(cell, 200, 200)
+        self.grid.place_entity(immune_cell, 20, 20)
+        self.grid.place_entity(cell, 250, 250)
 
     def render(self, screen_):
         screen_.fill((255, 255, 255))
