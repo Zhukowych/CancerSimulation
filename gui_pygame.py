@@ -6,21 +6,15 @@ from multiprocessing import Process, Queue, Value
 import sys
 import pygame
 
-
-from grid import Grid
 from automaton import FiniteAutomaton
-from entity import TrueStemCell, ImmuneCell, BiologicalCell
+from grid import Grid
+from entity import TrueStemCell, ImmuneCell
 from variables import Variables
 
 from constants import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
     BLOCK_SIZE_DIVISIBLE,
-    BUTTON_HEIGHT,
-    BUTTON_WIDTH,
-    BUTTON_ADD,
-    BUTTON_START,
-    BUTTON_STOP,
 )
 
 
@@ -34,7 +28,14 @@ running_sim = Value("i", 0)
 
 
 class Simulation:
-    def __init__(self, x: int, y: int, height=500, width=500, start_x=200, start_y=200):
+    """
+    Class
+    """
+
+    def __init__(self, x: int, y: int, height=500, width=500):
+        """
+        init func
+        """
         self.x = x
         self.y = y
         self.height = height
@@ -47,6 +48,9 @@ class Simulation:
         self.y += 1
 
     def draw(self):
+        """
+        draws sells
+        """
         if self.queue.empty() or not running_sim.value:
             return
 
@@ -62,7 +66,8 @@ class Simulation:
             pygame.Rect(self.x, self.y + 502, 500, 30),
         )
 
-        grid, days = self.queue.get()
+        # TODO
+        grid, days, cell_counter = self.queue.get()
 
         for x, y, color in grid:
             pygame.draw.rect(
@@ -83,6 +88,9 @@ class Simulation:
 
 
 def prepare_board():
+    """
+    renders board
+    """
 
     screen.fill((255, 255, 255))
     pygame.display.flip()
@@ -109,6 +117,9 @@ def prepare_board():
 
 
 def render_fps(x: int, y: int, fps_num: int):
+    """
+    render function to render fps
+    """
 
     pygame.draw.rect(
         screen,
@@ -123,6 +134,9 @@ def render_fps(x: int, y: int, fps_num: int):
 
 
 def render_sim_status(x: int, y: int):
+    """
+    render function for printing sim status
+    """
     pygame.draw.rect(
         screen,
         (255, 255, 255),
@@ -142,6 +156,12 @@ def render_sim_status(x: int, y: int):
 
 
 def step_calculator(queue, active, start_x, start_y):
+    """
+    Calculates a steps for each process. Creates an automaton and calculates one step at a time.
+    Puts in queue: list of [coordinates of active cells with their respective color, days elapsed,
+    CellCunter(for graphs)]
+    """
+
     automaton = FiniteAutomaton(Grid(500, 500), Variables())
     automaton.grid.place_entity(TrueStemCell(), start_x, start_y)
     automaton.grid.place_entity(ImmuneCell(), 1, 1)
@@ -149,7 +169,13 @@ def step_calculator(queue, active, start_x, start_y):
         if queue.empty() and active.value:
             automaton.next()
             automaton.variables.time_step()
-            queue.put((automaton.grid.coloured_cells, automaton.variables.days_elapsed))
+            queue.put(
+                (
+                    automaton.grid.coloured_cells,
+                    automaton.variables.days_elapsed,
+                    automaton.counter,
+                )
+            )
 
 
 if __name__ == "__main__":
@@ -157,9 +183,9 @@ if __name__ == "__main__":
 
     simulations = [
         Simulation(0, 0, 500, 500),
-        Simulation(540, 0, 500, 500, 50, 50),
-        Simulation(0, 540, 500, 500, 400, 400),
-        Simulation(540, 540, 500, 500, 250, 490),
+        Simulation(540, 0, 500, 500),
+        Simulation(0, 540, 500, 500),
+        Simulation(540, 540, 500, 500),
     ]
 
     processes = []
