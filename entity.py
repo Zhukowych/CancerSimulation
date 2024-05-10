@@ -8,11 +8,7 @@ from cell import Cell
 class Entity:
     """Entity"""
 
-    __dict__ = [
-        "cell",
-        "neighbors",
-        'free_neighbors'
-    ]
+    __dict__ = ["cell", "neighbors", "free_neighbors"]
 
     def __init__(self) -> None:
         """Initialize entity"""
@@ -55,13 +51,7 @@ class BiologicalCell(Entity):
 
     ID = 1
 
-    __dict__ = [
-        "ID",
-        "proliferation_potential",
-        "cell",
-        "neighbors",
-        "free_neighbors"
-    ]
+    __dict__ = ["ID", "proliferation_potential", "cell", "neighbors", "free_neighbors"]
 
     def __init__(self, proliferation_potential=MAX_PROLIFERATION_POTENTIAL, *args, **kwargs) -> None:
         """Initialize Biological cell"""
@@ -201,6 +191,7 @@ class TrueStemCell(CancerCell):
     Cell that is immortal and can give birth to either
     RTC or other True stem cell
     """
+
     ID = 3
 
     @property

@@ -1,4 +1,5 @@
 """Finite automaton"""
+
 import numpy as np
 from random import randint
 from math import sqrt
@@ -14,6 +15,7 @@ class CellCounter:
         self.tumor_cell = 0
         self.proliferating_cell = 0
         self.stem_cell = 0
+
 
 class FiniteAutomaton:
     """Finite automaton"""
@@ -33,8 +35,9 @@ class FiniteAutomaton:
         self.counter = CellCounter()
 
         if self.edge_cells:
-            self.variables.Rt = sum(cell.distance for cell in self.edge_cells) \
-                // len(self.edge_cells)
+            self.variables.Rt = sum(cell.distance for cell in self.edge_cells) // len(
+                self.edge_cells
+            )
 
         edge_cells = []
 
@@ -51,8 +54,10 @@ class FiniteAutomaton:
             entity.neighbors = cell.neighbors
             entity.free_neighbors = cell.get_free_neighbor()
 
-            max_energy_neighbor = max(entity.neighbors, key=lambda c: c.entity.energy_level
-                                      if c.entity else float('inf'))
+            max_energy_neighbor = max(
+                entity.neighbors,
+                key=lambda c: c.entity.energy_level if c.entity else float("inf"),
+            )
 
             if max_energy_neighbor.entity:
                 entity.energy_level = max_energy_neighbor.entity.energy_level - 1
@@ -76,10 +81,11 @@ class FiniteAutomaton:
 
         self.spawn_immune_cells()
 
-    def spawn_immune_cells(self):
-        recrutient = 2 * self.counter.immune_cell * self.counter.tumor_cell / (10 ** 3 + self.counter.tumor_cell)
-
-        if self.counter.immune_cell >= 1000:
+    def spawn_immune_cells(self, counter: CellCounter):
+        recrutient = (
+            2 * counter.immune_cell * counter.tumor_cell / (10**3 + counter.tumor_cell)
+        )
+        if counter.immune_cell >= 1000:
             return
 
         for _ in range(int(recrutient)):

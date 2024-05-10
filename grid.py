@@ -1,4 +1,5 @@
 """Grid and cell"""
+
 from typing import Iterable
 import numpy as np
 from random import randint
@@ -8,18 +9,16 @@ from entity import Entity
 
 
 class Grid:
-    """Grid"""    
+    """Grid"""
 
     def __init__(self, width=1000, height=1000) -> None:
-        """Initialize the grid"""        
+        """Initialize the grid"""
 
         self.width = width
         self.height = height
 
         self.active_cells = set()
-        self.grid = [ [Cell(x, y) for x in range(width)]
-                       for y in range(height) ]
-
+        self.grid = [[Cell(x, y) for x in range(width)] for y in range(height)]
 
         for row in self.grid:
             for cell in row:
@@ -27,8 +26,8 @@ class Grid:
                 cell.add_entity_callback = lambda c: self.add_active_cell(c)
                 cell.remove_entity_callback = lambda c: self.remove_active_cell(c)
                 cell.neighbors = self.get_neighbors_of(cell)
-                cell.distance = sqrt( (cell.x - cx) ** 2 + (cell.y - cy) ** 2 )
-                cell.phi = np.arctan2(cell.y-cy, cell.x-cx)
+                cell.distance = sqrt((cell.x - cx) ** 2 + (cell.y - cy) ** 2)
+                cell.phi = np.arctan2(cell.y - cy, cell.x - cx)
 
     @property
     def center(self) -> tuple[int, int]:
@@ -39,6 +38,11 @@ class Grid:
     def cells(self) -> Iterable:
         """Return all cells iterator"""
         return self.active_cells
+
+    @property
+    def coloured_cells(self) -> Iterable:
+        # print(self.active_cells)
+        return [(cell.x, cell.y, cell.entity.color) for cell in self.active_cells]
 
     def add_active_cell(self, cell: Cell) -> None:
         """Add active cell"""
@@ -60,11 +64,11 @@ class Grid:
         """
         Convert list of Cell objects to list of int
         """
-        return [ [ cell.entity_id for cell in row] for row in self.grid ]
+        return [[cell.entity_id for cell in row] for row in self.grid]
 
     def get_neighbors_of(self, cell: Cell) -> list[Cell]:
         """
-        Return neighbors of given cell - all adjacent cells 
+        Return neighbors of given cell - all adjacent cells
         in the grid
         """
 
