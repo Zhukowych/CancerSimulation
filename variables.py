@@ -20,10 +20,9 @@ class Variables:
         self.necrotic_energy_level = 2
         self.quiescent_energy_level = 5
 
-
-
         self.treatment_start_time = 10
-        self.injection_interval = 2
+        self.injection_interval = 10
+        self.time_constant = 3
 
         self.time_delta = 5
 

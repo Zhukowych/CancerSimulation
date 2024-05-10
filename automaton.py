@@ -34,6 +34,7 @@ class FiniteAutomaton:
         random_variables = np.random.rand(len(cells), 3)
         self.counter = CellCounter()
 
+        
         if self.edge_cells:
             self.variables.Rt = sum(cell.distance for cell in self.edge_cells) // len(
                 self.edge_cells
@@ -81,11 +82,15 @@ class FiniteAutomaton:
 
         self.spawn_immune_cells()
 
-    def spawn_immune_cells(self, counter: CellCounter):
+    def process_chemotherapy(self, entity: Entity):
+        """Process effect of chemotherapy on cell"""
+
+
+    def spawn_immune_cells(self):
         recrutient = (
-            2 * counter.immune_cell * counter.tumor_cell / (10**3 + counter.tumor_cell)
+            2 * self.counter.immune_cell * self.counter.tumor_cell / (10**3 + self.counter.tumor_cell)
         )
-        if counter.immune_cell >= 1000:
+        if self.counter.immune_cell >= 1000:
             return
 
         for _ in range(int(recrutient)):

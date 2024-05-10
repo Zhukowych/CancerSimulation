@@ -77,17 +77,7 @@ class BiologicalCell(Entity):
 
     def next_state(self, *random_values) -> None:
         """Next state implementation to BiologicalCell"""
-        apotisis, proliferation, migration = random_values
-
-        if apotisis <= self.apotisis_probability or self.proliferation_potential == 0:
-            self.apotose()
-            return
-
-        if proliferation <= self.proliferation_probability:
-            self.proliferate()
-
-        if migration <= self.migration_probability:
-            self.move_to_random()
+        pass
 
     def proliferate(self) -> None:
         """Proliferate"""
@@ -122,7 +112,7 @@ class BiologicalCell(Entity):
 class CancerCell(BiologicalCell):
     """Cancer cell"""
 
-    def __init__(self, proliferation_potential=MAX_PROLIFERATION_POTENTIAL, 
+    def __init__(self, proliferation_potential=MAX_PROLIFERATION_POTENTIAL,
                  *args, **kwargs) -> None:
         super().__init__(proliferation_potential, *args, **kwargs)
 
@@ -144,7 +134,6 @@ class CancerCell(BiologicalCell):
         if self.energy_level <= variables.necrotic_energy_level:
             self.cell.entity = NecroticCell()
 
-
     def replicate(self) -> Entity:
         """Return daughter cell"""
         daughter =  CancerCell(self.proliferation_potential - 1)
@@ -155,7 +144,6 @@ class CancerCell(BiologicalCell):
     def color(self) -> tuple[int, int, int]:
         r, g, b =  LOW_PROLIFERATION_COLOR + self.proliferation_potential * DELTA
         return int(r), int(g), int(b)
-
 
 
 class QuiescentCell(BiologicalCell):
