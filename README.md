@@ -12,4 +12,6 @@ pip install -r requirements
 
 # Model
 In this project we implemented models proposed in the following articles: 
-- [link]{https://github.com/n1n1n1q/Terrain-Generation/tree/main}
+- [Cellular-automaton model for tumor growth dynamics: Virtualization of different scenarios](https://www.sciencedirect.com/science/article/pii/S0010482522011891?ref=pdf_download&fr=RR-2&rr=8800d112bd3635b1)
+- [A cellular automata model of chemotherapy effects on tumour growth: targeting cancer and immune cells](https://www.tandfonline.com/doi/full/10.1080/13873954.2019.1571515)
+
