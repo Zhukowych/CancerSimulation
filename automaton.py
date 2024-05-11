@@ -31,10 +31,9 @@ class FiniteAutomaton:
         """Make step in automaton"""
 
         cells = self.grid.cells.copy()
-        random_variables = np.random.rand(len(cells), 3)
+        random_variables = np.random.rand(len(cells), 5)
         self.counter = CellCounter()
 
-        
         if self.edge_cells:
             self.variables.Rt = sum(cell.distance for cell in self.edge_cells) // len(
                 self.edge_cells
@@ -80,13 +79,17 @@ class FiniteAutomaton:
 
         self.edge_cells = edge_cells
 
+        self.process_chemotherapy()
         self.spawn_immune_cells()
 
-    def process_chemotherapy(self, entity: Entity):
+    def process_chemotherapy(self):
         """Process effect of chemotherapy on cell"""
 
+        if self.variables.is_injection_start:
+            self.variables.injection_number += 1
 
     def spawn_immune_cells(self):
+        """Spawn immune cells on the grid"""
         recrutient = (
             2 * self.counter.immune_cell * self.counter.tumor_cell / (10**3 + self.counter.tumor_cell)
         )

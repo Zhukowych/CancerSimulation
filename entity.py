@@ -1,4 +1,5 @@
 """Entities"""
+import math
 import numpy as np
 from variables import Variables
 from random import random, choice
@@ -45,6 +46,14 @@ LOW_PROLIFERATION_COLOR = np.array([0, 0, 0])
 
 DELTA = ( MAX_PROLIFERATION_COLOR - LOW_PROLIFERATION_COLOR ) / MAX_PROLIFERATION_POTENTIAL
 print(DELTA)
+
+
+def get_chemo_death_probability(theta, k, y, variables: Variables) -> float:
+    """Return probability of cell's death due to chemotherapy"""
+    l = k * variables.drug_concentration / (theta * y * variables.injection_number + 1)
+    return l * variables.PK * math.e ** ( -variables.ci * (variables.days_elapsed - \
+            variables.injection_number * variables.time_constant))
+
 
 class BiologicalCell(Entity):
     """Biological cell"""
@@ -117,7 +126,7 @@ class CancerCell(BiologicalCell):
         super().__init__(proliferation_potential, *args, **kwargs)
 
     def next_state(self, variables: Variables, *random_variables) -> None:
-        apotosis, proliferation, migration, *_ = random_variables
+        apotosis, proliferation, migration, theta, death = random_variables
 
         br = variables.p0 * (1 - (self.cell.distance / (variables.Rmax - variables.Kc) ))
 
@@ -131,8 +140,30 @@ class CancerCell(BiologicalCell):
         if migration <= self.migration_probability:
             self.move_to_random()
 
+        self.process_chemotherapy(variables=variables, theta=theta, death=death)
+
         if self.energy_level <= variables.necrotic_energy_level:
             self.cell.entity = NecroticCell()
+
+
+    def process_chemotherapy(self, variables: Variables, theta: float, death: float) -> None:
+        """Process the effect of the chemotherapy"""
+
+        if not variables.is_treatment:
+            return
+
+        chemo_death_probability = self.get_chemo_death_probability(theta=theta, variables=variables)
+
+        if death <= chemo_death_probability:
+            self.apotose()
+
+
+    def get_chemo_death_probability(self, variables, theta) -> float:
+        """Return the probability of death due to chemotherapy"""
+        return get_chemo_death_probability(theta=theta,
+                                           k=variables.kPC,
+                                           y=variables.yPC,
+                                           variables=variables)
 
     def replicate(self) -> Entity:
         """Return daughter cell"""
@@ -195,6 +226,9 @@ class TrueStemCell(CancerCell):
         else:
             daughter =  CancerCell(self.proliferation_potential)
         return daughter
+
+    def get_chemo_death_probability(self, variables, theta) -> float:
+        return 0
 
     @property
     def color(self):
