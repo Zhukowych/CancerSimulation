@@ -1,41 +1,53 @@
 """Variables"""
-import numpy as np
+import yaml
 
 class Variables:
     """Variables"""
 
-    def __init__(self) -> None:
-        self.p0 = 0.7
-        self.ap = 0.42
-        self.bn = 0.53
+    def __init__(self,
+                 name=None,
+                 p0=0.7, ap=0.42, bn=0.53,
+                 Kc=10, Rmax=100, pdT=0.5, pdI=0.5,
+                 yPC=0.55, yQ=0.4, yI=0.7, kPC=0.8,
+                 kQ=0.4, kI=0.6, ci=0.5, PK=1, max_energy_level=30,
+                 necrotic_energy_level=2, quiescent_energy_level=5,
+                 treatment_start_time=10, injection_interval=10,
+                 time_constant=3, drug_concentration=10
+                 ) -> None:
+        self.name = name
 
+        # Static variables
+        self.p0 = p0
+        self.ap = ap
+        self.bn = bn
+
+        self.Kc = Kc
+        self.Rmax = Rmax
+
+        self.pdT = pdT
+        self.pdI = pdI
+
+
+        self.yPC = yPC
+        self.yQ = yQ
+        self.yI = yI
+        self.kPC = kPC
+        self.kQ = kQ
+        self.kI = kI
+        self.ci = ci
+        self.PK = PK
+
+        self.max_energy_level = max_energy_level
+        self.necrotic_energy_level = necrotic_energy_level
+        self.quiescent_energy_level = quiescent_energy_level
+
+        self.treatment_start_time = treatment_start_time
+        self.injection_interval = injection_interval
+        self.time_constant = time_constant
+        self.drug_concentration = drug_concentration
+
+        # Dynamic variables
         self.Rt = 0
-        self.Kc = 10
-        self.Rmax = 100
-
-        self.pdT = 0.5
-        self.pdI = 0.5
-
-
-        self.yPC = 0.55
-        self.yQ = 0.4
-        self.yI = 0.7
-        self.kPC = 0.8
-        self.kQ = 0.4
-        self.kI = 0.6
-        self.ci = 0.5
-        self.PK = 1
-
-        self.max_energy_level = 30
-        self.necrotic_energy_level = 2
-        self.quiescent_energy_level = 5
-
-        self.treatment_start_time = 10
-        self.injection_interval = 10
-        self.time_constant = 3
-
-        self.drug_concentration = 10
-
         self.injection_number = 0
         self.time_delta = 5
         self.time = 0
@@ -47,7 +59,7 @@ class Variables:
     @property
     def Rn(self) -> float:
         return self.Rt - self.bn * self.Rt ** (2/3)
-    
+
     @property
     def days_elapsed(self) -> int:
         return self.time // 24
@@ -83,3 +95,43 @@ class Variables:
         if days_from_start % self.injection_interval == 0:
             return True
         return False
+
+
+class ConfigFileException(Exception):
+    """Exception for incorrect config file"""
+
+
+def read_variables(filepath: str) -> list[Variables]:
+    """
+    Read configuration file and return list of Variables for
+    each proposed simulation 
+    """
+
+    config = {}
+    with open(filepath, 'r', encoding="utf8") as stream:
+        try:
+            config = yaml.safe_load(stream)
+        except yaml.YAMLError:
+            raise ValueError("You passed incorrect yaml file")
+
+        variables = []
+
+        global_variables = config.get('global')
+        if not global_variables:
+            raise ConfigFileException("You must define `global` section in you config file")
+
+        simulation_list = config.get("simulations")
+        if not simulation_list:
+            raise ConfigFileException("You must define `simulations` section in you config file")
+
+        for simulation_identifier, simulation_config in simulation_list.items():
+            simulation_name = simulation_config.get('name')
+
+            if not simulation_name:
+                raise ConfigFileException(f"You must define `name` in simulation\
+                                           {simulation_identifier}")
+
+            simulation_variables = global_variables | simulation_config
+            variables.append(Variables(**simulation_variables))
+
+    return variables

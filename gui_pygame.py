@@ -2,10 +2,11 @@
 Super pygame visualisation with multiprocessing backed up with rust, C and C++ at the same time.
 """
 
-from multiprocessing import Process, Queue, Value
 import sys
-import pygame
+from multiprocessing import Process, Queue, Value
 
+import pygame
+import argparse
 from automaton import FiniteAutomaton
 from grid import Grid
 from entity import TrueStemCell, ImmuneCell
@@ -179,10 +180,15 @@ def step_calculator(queue, active, start_x, start_y):
 
 
 if __name__ == "__main__":
+    argument_parser = argparse.ArgumentParser(description="Cancer simulation.")
+
+    argument_parser.add_argument("config_file", type=str, required=True)
+    args = argument_parser.parse_args()
+
     pygame.init()
 
     simulations = [
-        Simulation(0, 0, 500, 500),
+        Simulation(0, 0, 410, 510),
         Simulation(540, 0, 500, 500),
         Simulation(0, 540, 500, 500),
         Simulation(540, 540, 500, 500),
