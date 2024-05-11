@@ -84,7 +84,6 @@ class FiniteAutomaton:
 
     def process_chemotherapy(self):
         """Process effect of chemotherapy on cell"""
-
         if self.variables.is_injection_start:
             self.variables.injection_number += 1
 
