@@ -5,6 +5,7 @@ Super pygame visualisation with multiprocessing backed up with rust, C and C++ a
 from multiprocessing import Process, Queue, Value
 import sys
 import pygame
+import pygame_chart as pyc
 
 from automaton import FiniteAutomaton
 from grid import Grid
@@ -26,6 +27,7 @@ GRID_SIZE = (
 )  # x,y
 
 GRID_SIZE = min(GRID_SIZE), min(GRID_SIZE)
+
 
 DASHBOARD_X_Y = 0, BETWEEN_IND[1] * 3 + GRID_SIZE[1] * 2 + 4
 DASHBOARD_SIZE = SCREEN_WIDTH, SCREEN_HEIGHT - GRID_SIZE[1] * 2 - BETWEEN_IND[1] - 4
@@ -51,6 +53,8 @@ class Simulation:
         """
         init func
         """
+        self.counter = None
+
         self.x = x
         self.y = y
         self.name = name
@@ -80,7 +84,7 @@ class Simulation:
         # )
 
         # TODO
-        grid, days, cell_counter = self.queue.get()
+        grid, days, self.counter = self.queue.get()
 
         for x, y, color in grid:
             pygame.draw.rect(
@@ -102,6 +106,31 @@ class Simulation:
         # text_font.render(f"D: {days} days", False, (0, 0, 0)),
         # (self.x, self.y + GRID_SIZE[1] + 2),
         # )
+
+class Chart:
+    """Represents a chart that displays the number of each cell type over time"""
+    def __init__(self, sim_index, simulation: Simulation):
+        """
+        Initializes the chart
+        """
+        self.sim = simulation
+        self.index = sim_index
+        self.figure = pyc.Figure(screen, self.sim.x + GRID_SIZE[0]*2 + BETWEEN_IND[0], self.sim.y, GRID_SIZE[0], GRID_SIZE[1])
+
+    def draw(self):
+        """Draws the chart"""
+        data = [0, 0, 0, 0] if not self.sim.counter else [self.sim.counter.immune_cell, self.sim.counter.tumor_cell, self.sim.counter.proliferating_cell, self.sim.counter.stem_cell]
+        self.figure.set_ylim((0, 5000))
+        self.figure.set_xlim((0, 8))
+        self.figure.add_title(f"Simulation {self.index + 1}")
+        self.figure.add_legend()
+        self.figure.add_gridlines()
+
+
+        self.figure.bar('Immune, Tumor, Proliferating and Stem cells', [1, 3, 5, 7], data, color=(168, 168, 168))
+        self.figure.draw()
+
+
 
 
 def prepare_board():
@@ -376,6 +405,10 @@ if __name__ == "__main__":
         ),
     ]
 
+    charts = [
+        Chart(i, sim) for i,sim in enumerate(simulations)
+    ]
+
     processes = []
 
     for sim in simulations:
@@ -388,6 +421,10 @@ if __name__ == "__main__":
     prepare_board()
 
     while True:
+
+        for chart in charts:
+            chart.draw()
+
         for sim in simulations:
             sim.draw()
 
