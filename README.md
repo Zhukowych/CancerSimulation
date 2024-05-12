@@ -88,7 +88,7 @@ $$l_i=\frac{l_i\times g}{y'_i\times n_d+1}$$
 
 $$y'_i = \theta\times y_i$$ 
 
-$$ 0<random \theta \leq1$$
+$$ 0< \theta \leq1$$
 
 where i can be (RTC, QC, IC) and $g$ is the drug concentration at each cell. Also therapy affects proliferation potentiaд
 
