@@ -5,18 +5,22 @@ We implemented cancer development and chemotherapy impact simulation using **sto
 ![Alt text](img/first_screen.png?raw=true "Optional Title")
 
 ## Contents
-- [Instalation](#instalation)
-- [Usage](#usage)
-- [Simulation model](#simulation-model)
+- [Cancer simulation](#cancer-simulation)
+  - [Contents](#contents)
+  - [Instalation](#instalation)
+  - [Usage](#usage)
+  - [Simulation model](#simulation-model)
     - [States](#states)
     - [Initial parameters](#initial-parameters)
     - [Transition rules](#transition-rules)
-        - [Growth rules](#growth-rules)
-        - [Therapy impact](#therapy-impact)
-- [Implementation & architecture](#implementation--architecture)
+    - [Growth rules](#growth-rules)
+    - [Therapy impact](#therapy-impact)
+  - [Implementation \& architecture](#implementation--architecture)
     - [Model](#model)
     - [GUI](#gui)
     - [Config file](#config-file)
+  - [Simulation demonstrations](#simulation-demonstrations)
+  - [Team](#team)
 
 
 ## Instalation
@@ -136,7 +140,30 @@ Model of cellular automaton consists of the following classes:
  All, in all this this architecture decisions made development of model very flexible what allowed us to make more experiments on the system
 
 ### GUI
+PyGame framework was used for GUI development. Upon initialization each simulation's grid size is calculated according to indentation size, which itself is calculated with respect to window size, that can be set in [constants.py](./constants.py). The following formulas are used:
+$$
+GCL=\min\left(\left\lfloor  \frac{\left\lfloor\frac{SW}{2} \right\rfloor - 3IX}{2} \right \rfloor ,\left\lfloor  \frac{SH - 3IY}{2} \right \rfloor  \right)
+\newline
+$$
+$$
+IX = \left\lfloor\frac{SW}{190}\right\rfloor
+$$
+$$
+IY = \left\lfloor\frac{SH}{50}\right\rfloor \text{where}
+$$
+$$
+GCL - \text{grid side length} \\
+IX - \text{indentation with respect to x axis} \\
+IY - \text{indentation with respect to y axis} \\
+SW - \text{screen width} \\
+SH - \text{screen height} \\
+$$
 
+Simulations' outlines and dashboard are rendered with the help of "prepare_board" function. Also few functions were implemented for handiness of working with text, such as: render_fps, render_sim_status, render_text.
+
+Simulation, class stores counter, coordiantes of left corner of simulation, name and queue. Queue is a shared memory between simulation and paralleled process where steps are calculated. Draw method of Simulation blanks it's area on each tick and draws only pixels that contaion cells.
+
+Each simulation's step is calculated in a respective parallel process with function "calculate_step". Than, on each tick whole board is rerendered.
 ### Config file
 
 [Initial parameters](#initial-parameters) have default values in our implementation, but to compare different therapy strategies or various drugs we must vary these parameters, so user must pass a yaml file with settings for each simulation:
