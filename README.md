@@ -14,7 +14,7 @@ We implemented cancer development and chemotherapy impact simulation using **sto
         - [Growth rules](#growth-rules)
         - [Therapy impact](#therapy-impact)
 - [Implementation & architecture](#implementation--architecture)
-    - [Model](#model)
+    - [Model architecture](#model-architecture)
     - [GUI](#gui)
     - [Config file](#config-file)
 
@@ -48,7 +48,7 @@ By combining models from both articles we have have following states and, list o
 | State Index | Description | Abbreviation |
 | --- | ---| --- |
 | 0   | Empty Cell | EC
-| 1   | Regular cancer cell | RTC
+| 1   | Regular tumor cell | RTC
 | 2   | Stem Cell | SC
 | 3   | Quiescent Cell | QC
 | 4   | Necrotic Cell | NC
@@ -58,26 +58,31 @@ By combining models from both articles we have have following states and, list o
 
 | Parameter | Description | Name in config file | Default value |
 | --- | ---| --- |--- |
-| $p_0$   | Probability of division | | 0.7
-| $p_S$   | Probability of stem division | | 0.1
-| $p_A$   | Probability of apotosis (spontaneous death) | | 0.3
-| $\mu$  | Migration probability | | 0.4
-| $R_{max}$   | Maximum tumor extent | | 37.5
-| $p_{dT}$   | Tumor death constant | | 37.5
-| $p_{I}$   | Immune death constant | | 37.5
-| $K_{c}$   | Chemotherapy effect on division | | 37.5
-| $y_{PC}$   | PC's resistance to treatment | | 37.5
-| $y_{Q}$   | QC's resistance to treatment | | 37.5
-| $y_{I}$   | IC's resistance to treatment | | 37.5
-| $k_{PC}$   | PC's death due to treatment | | 37.5
-| $k_{Q}$   | QC's death due to treatment | | 37.5
-| $k_{I}$   | IC's death due to treatment | | 37.5
-| $c_{i}$   | The attenuation coefficient of a drug for any cell type | | 37.5
-| $n_{dead}$ | Number of steps before death due to treatment | | 4 |
-| $PK$   | Pharmacokinetics | | 37.5
-| $t_{ap}$   | Start time of therapy | | -
-| $t_{per}$   | Time interval between injections | | -
-| $\tau$   | time constant of each dose | | 
+| $p_0$   | Probability of division | p0 | 0.7
+| $p_S$   | Probability of stem division | pS | 0.1
+| $p_A$   | Probability of apotosis (spontaneous death) | pA | 0.01
+| $\mu$  | Migration probability | mu | 0.4
+| $R_{max}$   | Maximum tumor extent | Rmax | 37.5
+| $p_{dT}$   | Tumor death constant | pdT | 0.5
+| $p_{I}$   | Immune death constant | pdI | 0.2
+| $K_{c}$   | Chemotherapy effect on division | Kc | $0 - R_{max}/2$
+| $y_{PC}$   | PC's resistance to treatment | yPC | 0.55 - 0.95
+| $y_{Q}$   | QC's resistance to treatment | yQ | 0 - 0.4
+| $y_{I}$   | IC's resistance to treatment | yI | 0 - 0.7
+| $k_{PC}$   | PC's death due to treatment | kPC | 0.8
+| $k_{Q}$   | QC's death due to treatment | kQ | 0.4
+| $k_{I}$   | IC's death due to treatment | kI | 0.6
+| $c_{i}$   | The attenuation coefficient of a drug for any cell type | ci | 0.5 - 1
+| $ics$   | How quickly IC will find tumor | ics | 0 - 1
+| $icc$   | Immune cell concentration | icc | 0 - 10000
+| $d_{QC}$ | Quiescent distance | quiescent_distance | - |
+| $d_{NC}$ | Necrotic distance | necrotic_distance | - |
+| $n_{dead}$ | Number of steps before death due to treatment | ndead | 4 |
+| $PK$   | Pharmacokinetics | PK | 1
+| $t_{ap}$   | Start time of therapy | treatment_start_time | -
+| $t_{per}$   | Time interval between injections | injection_interval | -
+| $\tau$   | time constant of each dose | time_constant | -
+| $g$   | Drug concentration | g | -
 
 ### Transition rules
 
@@ -85,10 +90,11 @@ Simulation starts with cancer cell at the center of the lattice. Then the follow
 
 ### Growth rules
 - RTC can undergo apotosis (spontaneous cell death) with probability $p_A$. SC cannot spontaneously die due to this
-- A RTC and SC cells can **proliferate** (divide) with probability $br$ if there is empty neighbor cell. Probability depends on distance from the center of the tumor and parameters $R_{max}$ and $K_c$. $R_{max}$ is used to factor in the pressure of surrounding tissue and $K_c$ to take into account maximum possible population of cancer cells in environment. 
+- A RTC and SC are both Proliferating cells that can **proliferate** (divide) with probability $br$ if there is empty neighbor cell. Probability depends on distance from the center of the tumor and parameters $R_{max}$ and $K_c$. $R_{max}$ is used to factor in the pressure of surrounding tissue and $K_c$ to take into account maximum possible population of cancer cells in environment. 
 $$br = p_0 \left(1 - \frac{r}{R_{max} - K_c}\right) $$
  - While RTC and SC proliferate with same probability, they have differences. Each RTC has finite number of possible proliferations given with parameter **max_proliferation_potential**, and with each division this potential decreases by one. When potential is 0, cell dies. SC can proliferate infinitely, but it has probability $p_S$ of dividing into two stem cells, otherwise it will proliferate into two RTCs with maximum_proliferation potential
  - RTC and SC can migrate to free neighbor cell with probability $\mu$
+ - If RTC or SC are **quiescent_distance** from tumor edges, it will turn to QC (quiescent cell). If QC is less that **quiescent_distance** from tumor edges, it will turn back to RTC or SC.
  - If RTC or SC are **necrotic_distance** from cancer edges, they became necrotic cells (NC), which cannot be affected neither by immune system nor by chemotherapy.
  - ICs walk randomly on the lattice, but generally move to the center of the tumor. If IC meets RTC or SC, then following actions will happen:
     1. Cancer cell will die with probability $p_{dT}$ 
@@ -114,22 +120,25 @@ $$y'_i = \theta\times y_i$$
 
 $$ 0< \theta \leq1$$
 
-where i can be (RTC, QC, IC) and $g$ is the drug concentration at each cell. Also therapy affects proliferation potentiaд
+where i can be (RTC, QC, IC) and $g$ is the drug concentration at each cell. Also therapy affects proliferation potential
 
 $$p_0' = \frac{p_0\times y_{PC}}{n_d^{1/n_{dead}}}$$
 
-
 Therapy is applied from $t_{ap}$ day with $t_{per}$ intervals and drug concentration remain the same during $\tau$ days after the injection
+
+In summary, relation between the states can be expressed as automaton diagram:
+![Alt text](img/diagram.png?raw=true "Optional Title")
 
 ## Implementation & architecture 
 
 During development we decided to separate app into two main modules - implementation of cellular automaton itself and visualization. GUI module uses simulation classes as interface getting only grids with color to draw, which eased and fastened development of app.
 
-### Model
+![Alt text](img/architecture.png?raw=true "Optional Title")
+### Model architecture
 
 Model of cellular automaton consists of the following classes:
- - **Grid** - is a class representation of lattice which contains 2d array of cells and takes care of list of **Cell**s. By doing this we save time by iterating over 1-d array to get next states of each cell but not the 2-d array. **Cell** itself contain data about it coordinates neighboring **Cell**s and **Entity** which it holds
- - **Entity** - is a class to define behavior of each state via overriding next_state method. So, in our implementation classes derived from **Entity** work as states. We have implemented the following **Entity**es: CancerCell, StemCell, QuiescentCell, NecroticCell, ImmuneCell.
+ - **Grid** - is a class representation of lattice which contains 2d array of cells and takes care of list of **Cell**s. By doing this we save time by iterating over 1-d array to get next states of each cell but not the 2-d array. **Cell** itself contain data about it coordinates, neighboring **Cell**s and **Entity** which it holds
+ - **Entity** - is a class to define behavior of each state via overriding next_state method. So, in our implementation classes derived from **Entity** work as states. We have implemented the following **Entity**es: BiologicalCell CancerCell, StemCell, QuiescentCell, NecroticCell, ImmuneCell. Each class has redefined next_state method 
  - **FiniteAutomaton** - main class of model that takes care of calling next_state() methods of each active entity, recruiting new ICs and controlling therapy injections.
  - **Variables** - class that holds all initial parameters as well as other dynamic variables that are needed in runtime
 
@@ -150,10 +159,9 @@ simulations:
     yPC: 0.3
 ```
 
-Each config file must contain global and simulations sections. In global section you can redefine parameters that will be set to all of proposed simulations. In simulations section you can add from 1 to 4 simulations settings. Each simulation section must contain its name and list of parameters that should be changed in this simulation. 
+Each config file must contain global and simulations sections. In global section you can redefine parameters that will be set to all of proposed simulations. In simulations section you can add from 1 to 4 simulations settings. Each simulation section must contain its name and list of parameters that should be changed in this simulation. Names of corresponding parameters are defined in table [Initial parameters](#initial-parameters)
 
 ## Simulation demonstrations
-
 
 
 ## Team

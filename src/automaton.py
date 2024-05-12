@@ -42,7 +42,7 @@ class FiniteAutomaton:
         edge_cells = []
 
         for cell in edge_cells:
-            cell.entity.energy_level = self.variables.max_energy_level
+            cell.entity.energy_level = 0
 
         for i, cell in enumerate(cells):
             if cell.empty:
@@ -53,16 +53,17 @@ class FiniteAutomaton:
             entity.cell = cell
             entity.neighbors = cell.neighbors
             entity.free_neighbors = cell.get_free_neighbor()
+            entity.variables = self.variables
 
-            max_energy_neighbor = max(
+            min_energy_neighbor = min(
                 entity.neighbors,
-                key=lambda c: c.entity.energy_level if c.entity else float("inf"),
+                key=lambda c: c.entity.energy_level if c.entity else 0,
             )
 
-            if max_energy_neighbor.entity:
-                entity.energy_level = max_energy_neighbor.entity.energy_level - 1
+            if min_energy_neighbor.entity:
+                entity.energy_level = min_energy_neighbor.entity.energy_level + 1
             else:
-                entity.energy_level = self.variables.max_energy_level
+                entity.energy_level = 0
 
             if entity.free_neighbors:
                 edge_cells.append(cell)
@@ -92,7 +93,7 @@ class FiniteAutomaton:
         recrutient = (
             2 * self.counter.immune_cell * self.counter.tumor_cell / (10**3 + self.counter.tumor_cell)
         )
-        if self.counter.immune_cell >= 1000:
+        if self.counter.immune_cell >= self.variables.max_immune_cell_count:
             return
 
         for _ in range(int(recrutient)):

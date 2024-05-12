@@ -41,7 +41,6 @@ class Grid:
 
     @property
     def coloured_cells(self) -> Iterable:
-        # print(self.active_cells)
         return [(cell.x, cell.y, cell.entity.color) for cell in self.active_cells]
 
     def add_active_cell(self, cell: Cell) -> None:

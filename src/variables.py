@@ -6,18 +6,26 @@ class Variables:
 
     def __init__(self,
                  name=None,
-                 p0=0.7, ap=0.42, bn=0.53,
+                 p0=0.7, pA=0, pS=0.1, ap=0.42, bn=0.53,
                  Kc=10, Rmax=100, pdT=0.5, pdI=0.5,
-                 yPC=0.55, yQ=0.4, yI=0.7, kPC=0.8,
+                 yPC=0.55, yQ=0.4, yI=0.7, kPC=0.8, mu=0.4, ics=0.4,
+                 max_immune_cell_count=2000,
                  kQ=0.4, kI=0.6, ci=0.5, PK=1, max_energy_level=30,
-                 necrotic_energy_level=2, quiescent_energy_level=5,
+                 necrotic_distance=30, quiescent_distance=30,
                  treatment_start_time=10, injection_interval=10,
-                 time_constant=3, drug_concentration=10
+                 time_constant=3, drug_concentration=0.1
                  ) -> None:
         self.name = name
 
         # Static variables
         self.p0 = p0
+        self.pA = pA
+        self.pS = pS
+        self.mu = mu
+
+        self.ics = ics
+        self.max_immune_cell_count = max_immune_cell_count
+
         self.ap = ap
         self.bn = bn
 
@@ -26,7 +34,6 @@ class Variables:
 
         self.pdT = pdT
         self.pdI = pdI
-
 
         self.yPC = yPC
         self.yQ = yQ
@@ -38,8 +45,8 @@ class Variables:
         self.PK = PK
 
         self.max_energy_level = max_energy_level
-        self.necrotic_energy_level = necrotic_energy_level
-        self.quiescent_energy_level = quiescent_energy_level
+        self.necrotic_distance = necrotic_distance
+        self.quiescent_distance = quiescent_distance
 
         self.treatment_start_time = treatment_start_time
         self.injection_interval = injection_interval
@@ -92,7 +99,7 @@ class Variables:
 
         days_from_start = self.days_elapsed - self.treatment_start_time
 
-        if days_from_start % self.injection_interval == 0:
+        if days_from_start % self.injection_interval == 0 and self.time % 24 == 0:
             return True
         return False
 
@@ -132,6 +139,10 @@ def read_variables(filepath: str) -> list[Variables]:
                                            {simulation_identifier}")
 
             simulation_variables = global_variables | simulation_config
-            variables.append(Variables(**simulation_variables))
+
+            if len(variables) != 4:
+                variables.append(Variables(**simulation_variables))
+            else:
+                raise ConfigFileException("You can set 4 simulations at most")
 
     return variables

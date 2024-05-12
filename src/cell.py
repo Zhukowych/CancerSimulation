@@ -63,7 +63,6 @@ class Cell:
     def color(self):
         if self.entity:
             return self.entity.color
-        # return "#000"
         return 0, 0, 0
 
     def get_free_neighbor(self):
