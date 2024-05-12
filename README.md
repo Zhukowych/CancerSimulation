@@ -37,7 +37,7 @@ To run app you must use the following bash command
 ```
 python csimulation.py config.yaml
 ```
-providing config.yaml file, which structure will be discussed further in the part [Config file](#config-file)
+providing config.yaml file, which structure will be discussed further in the part [Config file](#config-file). TO start simulation press "s" key.
 
 ## Simulation model
 In this project we implemented models proposed in the following articles. First focus on main principles of cancer growth, while second introduces main principles of chemotherapy treatment simulation.
@@ -141,23 +141,15 @@ Model of cellular automaton consists of the following classes:
 
 ### GUI
 PyGame framework was used for GUI development. Upon initialization each simulation's grid size is calculated according to indentation size, which itself is calculated with respect to window size, that can be set in [constants.py](./constants.py). The following formulas are used:
-$$
-GCL=\min\left(\left\lfloor  \frac{\left\lfloor\frac{SW}{2} \right\rfloor - 3IX}{2} \right \rfloor ,\left\lfloor  \frac{SH - 3IY}{2} \right \rfloor  \right)
-\newline
-$$
-$$
-IX = \left\lfloor\frac{SW}{190}\right\rfloor
-$$
-$$
-IY = \left\lfloor\frac{SH}{50}\right\rfloor \text{where}
-$$
-$$
-GCL - \text{grid side length} \\
+$$GCL=\min\left(\left\lfloor  \frac{\left\lfloor\frac{SW}{2} \right\rfloor - 3IX}{2} \right \rfloor ,\left\lfloor  \frac{SH - 3IY}{2} \right \rfloor  \right)
+\newline$$
+$$IX = \left\lfloor\frac{SW}{190}\right\rfloor$$
+$$IY = \left\lfloor\frac{SH}{50}\right\rfloor \text{where}$$
+$$GCL - \text{grid side length} \\
 IX - \text{indentation with respect to x axis} \\
 IY - \text{indentation with respect to y axis} \\
 SW - \text{screen width} \\
-SH - \text{screen height} \\
-$$
+SH - \text{screen height} \\$$
 
 Simulations' outlines and dashboard are rendered with the help of "prepare_board" function. Also few functions were implemented for handiness of working with text, such as: render_fps, render_sim_status, render_text.
 
