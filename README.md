@@ -19,7 +19,7 @@ In this project we implemented models proposed in the following articles. First 
 By combining models from both articles we have have following states and, list of initial parameters and set of rules:
 
 
-#### States
+#### States (Table 1)
 | State Index | Description | Abbreviation |
 | --- | ---| --- |
 | 0   | Empty Cell | EC
@@ -29,7 +29,7 @@ By combining models from both articles we have have following states and, list o
 | 4   | Necrotic Cell | NC
 | 5   | Immune Cell | IC 
 
-#### Initial parameters
+#### Initial parameters (Table 2)
 
 
 | Parameter | Description | Name in config file | Default value |
@@ -49,12 +49,11 @@ By combining models from both articles we have have following states and, list o
 | $k_{Q}$   | QC's death due to treatment | | 37.5
 | $k_{I}$   | IC's death due to treatment | | 37.5
 | $c_{i}$   | The attenuation coefficient of a drug for any cell type | | 37.5
+| $n_{dead}$ | Number of steps before death due to treatment | | 4 |
 | $PK$   | Pharmacokinetics | | 37.5
 | $t_{ap}$   | Start time of therapy | | -
 | $t_{per}$   | Time interval between injections | | -
 | $\tau$   | time constant of each dose | | 
--
-
 
 ### Transition rules
 
@@ -84,8 +83,16 @@ Firstly, we must make several assumptions:
 Drug can kill RTC, QC, IC with different probabilities:
 
 $$F_i(g) = l_i\times PK\times e^{-c_i(t - n_d\tau)}$$
+
 $$l_i=\frac{l_i\times g}{y'_i\times n_d+1}$$
+
 $$y'_i = \theta\times y_i$$ 
+
 $$ 0<random \theta \leq1$$
 
-where i can be (RTC, QC, IC) and $g$ is the drug concentration at each cell. Therapy is applied from $t_{ap}$ day with $t_{per}$ intervals and drug concentration remain the same during $\tau$ days after the injection
+where i can be (RTC, QC, IC) and $g$ is the drug concentration at each cell. Also therapy affects proliferation potentiaд
+
+$$p_0' = \frac{p_0\times y_{PC}}{n_d^{1/n_{dead}}}$$
+
+
+Therapy is applied from $t_{ap}$ day with $t_{per}$ intervals and drug concentration remain the same during $\tau$ days after the injection
