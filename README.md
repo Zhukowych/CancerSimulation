@@ -1,8 +1,25 @@
 
 # Cancer simulation
-We implemented cancer development and chemotherapy impact simulation using **stochastic cellular automaton** with Python
+We implemented cancer development and chemotherapy impact simulation using **stochastic cellular automaton** with Python. The main feature of implemented app is capability of simulating different treatment strategies under same-type cancer behavior.
 
-# Instalation
+![Alt text](img/first_screen.png?raw=true "Optional Title")
+
+## Contents
+- [Instalation](#instalation)
+- [Usage](#usage)
+- [Simulation model](#simulation-model)
+    - [States](#states)
+    - [Initial parameters](#initial-parameters)
+    - [Transition rules](#transition-rules)
+        - [Growth rules](#growth-rules)
+        - [Therapy impact](#therapy-impact)
+- [Implementation & architecture](#implementation--architecture)
+    - [Model](#model)
+    - [GUI](#gui)
+    - [Config file](#config-file)
+
+
+## Instalation
 To use app you must clone it from git repo and install requirements. Preferrable version Python3.12
 ```
 git clone https://github.com/Zhukowych/CancerSimulation.git
@@ -10,7 +27,15 @@ cd CancerSimulation
 pip install -r requirements
 ```
 
-# Model
+## Usage
+
+To run app you must use the following bash command
+```
+python csimulation.py config.yaml
+```
+providing config.yaml file, which structure will be discussed further in the part [Config file](#config-file)
+
+## Simulation model
 In this project we implemented models proposed in the following articles. First focus on main principles of cancer growth, while second introduces main principles of chemotherapy treatment simulation.
 - [Cellular-automaton model for tumor growth dynamics: Virtualization of different scenarios](https://www.sciencedirect.com/science/article/pii/S0010482522011891?ref=pdf_download&fr=RR-2&rr=8800d112bd3635b1)
 - [A cellular automata model of chemotherapy effects on tumour growth: targeting cancer and immune cells](https://www.tandfonline.com/doi/full/10.1080/13873954.2019.1571515)
@@ -19,7 +44,7 @@ In this project we implemented models proposed in the following articles. First 
 By combining models from both articles we have have following states and, list of initial parameters and set of rules:
 
 
-#### States (Table 1)
+### States
 | State Index | Description | Abbreviation |
 | --- | ---| --- |
 | 0   | Empty Cell | EC
@@ -29,8 +54,7 @@ By combining models from both articles we have have following states and, list o
 | 4   | Necrotic Cell | NC
 | 5   | Immune Cell | IC 
 
-#### Initial parameters (Table 2)
-
+### Initial parameters
 
 | Parameter | Description | Name in config file | Default value |
 | --- | ---| --- |--- |
@@ -59,7 +83,7 @@ By combining models from both articles we have have following states and, list o
 
 Simulation starts with cancer cell at the center of the lattice. Then the following rules are applied to each active (non-empty) cell.
 
-#### Growth rules
+### Growth rules
 - RTC can undergo apotosis (spontaneous cell death) with probability $p_A$. SC cannot spontaneously die due to this
 - A RTC and SC cells can **proliferate** (divide) with probability $br$ if there is empty neighbor cell. Probability depends on distance from the center of the tumor and parameters $R_{max}$ and $K_c$. $R_{max}$ is used to factor in the pressure of surrounding tissue and $K_c$ to take into account maximum possible population of cancer cells in environment. 
 $$br = p_0 \left(1 - \frac{r}{R_{max} - K_c}\right) $$
@@ -73,7 +97,7 @@ $$br = p_0 \left(1 - \frac{r}{R_{max} - K_c}\right) $$
     4. New ICs will be recruited according to the following law, where nIC, nRTC, nT - is number of ICs, RTCs and total number of tumor cells in current iteration. $\rho$ is the recruiting coefficient. Also we can set the limit of ICs by **max_immune_cell_count** parameter
     $$R = \rho\frac{nIC(t)\times nRTC(t)}{10^3 + nT(t)}$$
 
-#### Therapy impact
+### Therapy impact
 
 Firstly, we must make several assumptions:
 - Cancer cells can be divided into two types: drug-resistant cells (SC) and drug-sensitive cells (RTC). 
@@ -96,3 +120,44 @@ $$p_0' = \frac{p_0\times y_{PC}}{n_d^{1/n_{dead}}}$$
 
 
 Therapy is applied from $t_{ap}$ day with $t_{per}$ intervals and drug concentration remain the same during $\tau$ days after the injection
+
+## Implementation & architecture 
+
+During development we decided to separate app into two main modules - implementation of cellular automaton itself and visualization. GUI module uses simulation classes as interface getting only grids with color to draw, which eased and fastened development of app.
+
+### Model
+
+Model of cellular automaton consists of the following classes:
+ - **Grid** - is a class representation of lattice which contains 2d array of cells and takes care of list of **Cell**s. By doing this we save time by iterating over 1-d array to get next states of each cell but not the 2-d array. **Cell** itself contain data about it coordinates neighboring **Cell**s and **Entity** which it holds
+ - **Entity** - is a class to define behavior of each state via overriding next_state method. So, in our implementation classes derived from **Entity** work as states. We have implemented the following **Entity**es: CancerCell, StemCell, QuiescentCell, NecroticCell, ImmuneCell.
+ - **FiniteAutomaton** - main class of model that takes care of calling next_state() methods of each active entity, recruiting new ICs and controlling therapy injections.
+ - **Variables** - class that holds all initial parameters as well as other dynamic variables that are needed in runtime
+
+ All, in all this this architecture decisions made development of model very flexible what allowed us to make more experiments on the system
+
+### GUI
+
+### Config file
+
+[Initial parameters](#initial-parameters) have default values in our implementation, but to compare different therapy strategies or various drugs we must vary these parameters, so user must pass a yaml file with settings for each simulation:
+
+```yaml
+global:
+  yI: 1
+simulations:
+  simulation-1:
+    name: "my-first-simulation"
+    yPC: 0.3
+```
+
+Each config file must contain global and simulations sections. In global section you can redefine parameters that will be set to all of proposed simulations. In simulations section you can add from 1 to 4 simulations settings. Each simulation section must contain its name and list of parameters that should be changed in this simulation. 
+
+## Simulation demonstrations
+
+
+
+## Team
+ - [Anton Valihurskyi](https://github.com/BlueSkyAndSomeCurses) - Research, GUI development, computation paralelization
+ - [Oleksandra Sherhina](https://github.com/shshrg) - Current state chart creation, simulation video export
+ - [Viktoriia Lushpak](https://github.com/linyvez) - Current state chart creation, simulation video export
+ - [Maksym Zhuk](https://github.com/Zhukowych) - Research, cellular automaton implementation
