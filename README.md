@@ -145,11 +145,11 @@ $$GCL=\min\left(\left\lfloor  \frac{\left\lfloor\frac{SW}{2} \right\rfloor - 3IX
 \newline$$
 $$IX = \left\lfloor\frac{SW}{190}\right\rfloor$$
 $$IY = \left\lfloor\frac{SH}{50}\right\rfloor \text{where}$$
-$$GCL - \text{grid side length} \\
-IX - \text{indentation with respect to x axis} \\
-IY - \text{indentation with respect to y axis} \\
-SW - \text{screen width} \\
-SH - \text{screen height} \\$$
+$$GCL - \text{grid side length}$$
+$$IX - \text{indentation with respect to x axis}$$
+$$IY - \text{indentation with respect to y axis}$$
+$$SW - \text{screen width}$$
+$$SH - \text{screen height}$$
 
 Simulations' outlines and dashboard are rendered with the help of "prepare_board" function. Also few functions were implemented for handiness of working with text, such as: render_fps, render_sim_status, render_text.
 
