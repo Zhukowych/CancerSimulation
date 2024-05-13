@@ -1,0 +1,13 @@
+Metadata-Version: 2.1
+Name: cancer_simulation
+Version: 0.7.2
+Home-page: https://github.com/Zhukowych/CancerSimulation
+Requires-Dist: pygame==2.5.2
+Requires-Dist: pygame-chart==1.0.0
+Requires-Dist: numpy==1.26.3
+Requires-Dist: PyYAML==6.0.1
+
+We implemented cancer development and chemotherapy impact simulation using
+                   stochastic cellular automaton with Python. The main feature of implemented 
+                   app is capability of simulating different treatment strategies under same-
+                   type cancer behavior.
