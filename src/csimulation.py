@@ -2,8 +2,7 @@
 Super pygame visualisation with multiprocessing backed up with rust, C and C++ at the same time.
 """
 
-import sys
-from multiprocessing import Process, Queue, Value
+from multiprocessing import Process, Queue, Value, Event
 import pygame
 import pygame_chart as pyc
 
@@ -134,6 +133,7 @@ class Chart:
                 self.sim.counter.stem_cell,
             ]
         )
+        colors = ['#1b9e77', '#a9f971', '#fdaa48','#6890F0']
         self.figure.set_ylim((0, 10000))
         self.figure.set_xlim((0, 8))
         self.figure.add_title(f"Simulation {self.index + 1}")
@@ -144,7 +144,7 @@ class Chart:
             "Immune, Tumor, Proliferating and Stem cells",
             [1, 3, 5, 7],
             data,
-            color=(168, 168, 168),
+            color=colors[0],
         )
         self.figure.draw()
 
@@ -330,15 +330,10 @@ def render_fps(x: int, y: int, fps_num: int):
     )
 
 
-def render_sim_status(x: int, y: int):
+def render_sim_status():
     """
     render function for printing sim status
     """
-    # pygame.draw.rect(
-    #     screen,
-    #     (174, 198, 207),
-    #     pygame.Rect(x, y, 300, 400),
-    # )
 
     if running_sim.value:
         render_text(
@@ -368,9 +363,10 @@ def step_calculator(variables, queue, active, start_x, start_y):
     """
 
     automaton = FiniteAutomaton(Grid(GRID_SIZE[1], GRID_SIZE[0]), variables)
-    automaton.grid.place_entity(TrueStemCell(), start_x, start_y)
+    automaton.grid.place_entity(TrueStemCell(proliferation_potential=variables.max_proliferation_potential), start_x, start_y)
     automaton.grid.place_entity(ImmuneCell(), 1, 1)
     while True:
+
         if queue.empty() and active.value:
             automaton.next()
             automaton.variables.time_step()
@@ -445,13 +441,14 @@ def main():
                   GRID_SIZE[1] // 2),
         )
         new_process.start()
+        processes.append(new_process)
 
     prepare_board()
 
     pygame.display.set_caption("Cancer simulation")
+    run = True
 
-    while True:
-
+    while run:
 
         if all(simulation.has_frames for simulation in simulations):
             for chart in charts:
@@ -462,11 +459,9 @@ def main():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                for simulation in processes:
-                    simulation.kill()
-                pygame.quit()
-                sys.exit()
 
+                run = False
+                break 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_s:
                 running_sim.value = (running_sim.value + 1) % 2
 
@@ -484,7 +479,7 @@ def main():
             (0, 0, 0),
         )
 
-        render_sim_status(40, DASHBOARD_X_Y[1])
+        render_sim_status()
 
         render_text(
             "Days elapsed: " + str(simulations[0].days),
@@ -503,3 +498,8 @@ def main():
             (174, 198, 207),
             (0, 0, 0),
         )
+
+    for process in processes:
+        process.kill()
+
+    pygame.quit()

@@ -69,10 +69,11 @@ class FiniteAutomaton:
                 edge_cells.append(cell)
 
             self.counter.immune_cell += 1 if isinstance(entity, ImmuneCell) else 0
-            self.counter.tumor_cell += 1 if isinstance(entity, CancerCell) else 0
+            self.counter.proliferating_cell += 1 if isinstance(entity, (TrueStemCell, CancerCell)) else 0
+            self.counter.tumor_cell += 1 if isinstance(entity, (CancerCell, QuiescentCell, NecroticCell)) else 0
             self.counter.stem_cell += 1 if isinstance(entity, TrueStemCell) else 0
 
-            entity.next_state(self.variables, *random_variables[i])
+            entity.next_state(*random_variables[i])
 
             entity.cell = None
             entity.neighbors = None

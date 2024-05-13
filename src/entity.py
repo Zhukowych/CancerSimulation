@@ -6,7 +6,7 @@ from .variables import Variables
 from .cell import Cell
 
 
-MAX_PROLIFERATION_POTENTIAL = 30
+MAX_PROLIFERATION_POTENTIAL = 50
 MAX_PROLIFERATION_COLOR = np.array([250,0,0])
 LOW_PROLIFERATION_COLOR = np.array([0, 0, 0])
 
@@ -16,8 +16,7 @@ DELTA = ( MAX_PROLIFERATION_COLOR - LOW_PROLIFERATION_COLOR ) / MAX_PROLIFERATIO
 def get_chemo_death_probability(theta, k, y, variables: Variables) -> float:
     """Return probability of cell's death due to chemotherapy"""
     l = k * variables.drug_concentration / (theta * y * variables.injection_number + 1)
-    return l * variables.PK * math.e ** ( -variables.ci * (variables.days_elapsed - \
-            variables.injection_number * variables.time_constant))
+    return l * variables.PK * math.e ** ( -variables.ci * variables.days_from_injection)
 
 
 class Entity:
@@ -32,7 +31,7 @@ class Entity:
         self.free_neighbors = None
         self.variables = None
 
-    def next_state(self) -> None:
+    def next_state(self, *args, **kwargs) -> None:
         """Mutate cell or neighbors to represent the next state"""
 
     def move_to(self, next_cell: Cell) -> None:
@@ -61,8 +60,7 @@ class BiologicalCell(Entity):
 
     __dict__ = ["ID", "proliferation_potential", "cell", "neighbors", "free_neighbors", "variables"]
 
-    def __init__(self, proliferation_potential=MAX_PROLIFERATION_POTENTIAL,
-                 *args, **kwargs) -> None:
+    def __init__(self, *args, proliferation_potential=MAX_PROLIFERATION_POTENTIAL, **kwargs) -> None:
         """Initialize Biological cell"""
         super().__init__(*args, **kwargs)
 
@@ -79,14 +77,25 @@ class BiologicalCell(Entity):
         """Return probability of proliferation"""
         return self.variables.p0 * (1 - (self.cell.distance / (self.variables.Rmax - self.variables.Kc) ))
 
+    def process_chemotherapy(self, theta: float, death: float) -> None:
+        """Process the effect of the chemotherapy"""
+
+        if not self.variables.is_treatment:
+            return
+
+        chemo_death_probability = self.get_chemo_death_probability(theta=theta)
+        print(chemo_death_probability)
+        if death <= chemo_death_probability:
+            self.apotose()
+
+    def get_chemo_death_probability(self, theta) -> float:
+        """Return the probability of death due to chemotherapy"""
+        return 0
+
     @property
     def migration_probability(self) -> float:
         """Return probability of migration"""
         return self.variables.mu
-
-    def next_state(self, *random_values) -> None:
-        """Next state implementation to BiologicalCell"""
-        pass
 
     def proliferate(self) -> None:
         """Proliferate"""
@@ -104,7 +113,7 @@ class BiologicalCell(Entity):
 
     def replicate(self) -> Entity:
         """Return daughter cell"""
-        daughter =  BiologicalCell(self.proliferation_potential - 1)
+        daughter =  BiologicalCell(proliferation_potential=self.proliferation_potential - 1)
         self.proliferation_potential -= 1
         return daughter
 
@@ -121,12 +130,8 @@ class BiologicalCell(Entity):
 class CancerCell(BiologicalCell):
     """Cancer cell"""
 
-    def __init__(self, proliferation_potential=MAX_PROLIFERATION_POTENTIAL,
-                 *args, **kwargs) -> None:
-        super().__init__(proliferation_potential, *args, **kwargs)
-
-    def next_state(self, variables: Variables, *random_variables) -> None:
-        apotosis, proliferation, migration, theta, death = random_variables
+    def next_state(self, *random_variables) -> None:
+        apotosis, proliferation, migration, theta, death, *_ = random_variables
 
         if apotosis <= self.apotisis_probability:
             self.apotose()
@@ -138,36 +143,25 @@ class CancerCell(BiologicalCell):
         if migration <= self.migration_probability:
             self.move_to_random()
 
-        self.process_chemotherapy(variables=variables, theta=theta, death=death)
+        self.process_chemotherapy(theta=theta, death=death)
 
-        if self.energy_level >= variables.quiescent_distance:
+        if self.energy_level >= self.variables.quiescent_distance:
             self.cell.entity = QuiescentCell(self)
 
-        if self.energy_level >= variables.necrotic_distance:
+        if self.energy_level >= self.variables.necrotic_distance:
             self.cell.entity = NecroticCell()
 
 
-    def process_chemotherapy(self, variables: Variables, theta: float, death: float) -> None:
-        """Process the effect of the chemotherapy"""
-
-        if not variables.is_treatment:
-            return
-
-        chemo_death_probability = self.get_chemo_death_probability(theta=theta, variables=variables)
-
-        if death <= chemo_death_probability:
-            self.apotose()
-
-    def get_chemo_death_probability(self, variables, theta) -> float:
+    def get_chemo_death_probability(self, theta) -> float:
         """Return the probability of death due to chemotherapy"""
-        return   get_chemo_death_probability(theta=theta,
-                                             k=variables.kPC,
-                                             y=variables.yPC,
-                                             variables=variables)
+        return  get_chemo_death_probability(theta=theta,
+                                             k=self.variables.kPC,
+                                             y=self.variables.yPC,
+                                             variables=self.variables)
 
     def replicate(self) -> Entity:
         """Return daughter cell"""
-        daughter =  CancerCell(self.proliferation_potential - 1)
+        daughter =  CancerCell(proliferation_potential=self.proliferation_potential - 1)
         self.proliferation_potential -= 1
         return daughter
 
@@ -177,27 +171,30 @@ class CancerCell(BiologicalCell):
         return int(r), int(g), int(b)
 
 
-class QuiescentCell(BiologicalCell):
+class QuiescentCell(CancerCell):
     """Quiescent cell"""
 
     def __init__(self, previous_entity, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.previous_entity = previous_entity
 
-    def next_state(self, variables: Variables, *random_variables) -> None:
+    def next_state(self, *_) -> None:
         if self.energy_level < self.variables.quiescent_distance:
             self.cell.entity = self.previous_entity
+
+        if self.energy_level > self.variables.necrotic_distance:
+            self.cell.entity = NecroticCell()
 
     @property
     def color(self):
         return self.previous_entity
 
 
-class NecroticCell(BiologicalCell):
+class NecroticCell(CancerCell):
     """Necrotic cell"""
 
-    def next_state(self, variables: Variables, *random_variables) -> None:
-        pass
+    def next_state(self, *args, **kwargs) -> None:
+        """Necrotic cell cannot do anything"""
 
     @property
     def color(self):
@@ -222,12 +219,12 @@ class TrueStemCell(CancerCell):
         """Return daughter cell"""
         new_stem_chance = random()
         if new_stem_chance <= self.variables.pS:
-            daughter = TrueStemCell(self.proliferation_potential)
+            daughter = TrueStemCell(proliferation_potential=self.proliferation_potential)
         else:
-            daughter =  CancerCell(self.proliferation_potential)
+            daughter =  CancerCell(proliferation_potential=self.proliferation_potential)
         return daughter
 
-    def get_chemo_death_probability(self, variables, theta) -> float:
+    def get_chemo_death_probability(self, theta) -> float:
         return 0
 
     @property
@@ -238,8 +235,8 @@ class TrueStemCell(CancerCell):
 class ImmuneCell(BiologicalCell):
     """Immune cell"""
 
-    def next_state(self, variables: Variables, *random_values) -> None:
-        *_, cancer_cell_death_probability, immune_cell_death_probability = random_values
+    def next_state(self, *random_values) -> None:
+        *_, theta , death, cancer_cell_death_probability, immune_cell_death_probability = random_values
 
         self.move_to_random(immune_cell_death_probability)
 
@@ -248,13 +245,23 @@ class ImmuneCell(BiologicalCell):
                 continue
 
             if isinstance(neighbor.entity, CancerCell):
-                if cancer_cell_death_probability <= variables.pdT:
+                if cancer_cell_death_probability <= self.variables.pdT:
                     neighbor.entity = None
 
-                if immune_cell_death_probability <= variables.pdI:
+                if immune_cell_death_probability <= self.variables.pdI:
                     self.apotose()
 
                 break
+
+        self.process_chemotherapy(death=death, theta=theta)
+
+
+    def get_chemo_death_probability(self, theta) -> float:
+        """Return the probability of death due to chemotherapy"""
+        return  get_chemo_death_probability(theta=theta,
+                                             k=self.variables.kI,
+                                             y=self.variables.yI,
+                                             variables=self.variables)
 
     def move_to_random(self, direction_probability) -> None:
         """Move to random free neighbor"""

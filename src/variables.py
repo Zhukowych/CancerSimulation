@@ -13,7 +13,8 @@ class Variables:
                  kQ=0.4, kI=0.6, ci=0.5, PK=1, max_energy_level=30,
                  necrotic_distance=30, quiescent_distance=30,
                  treatment_start_time=10, injection_interval=10,
-                 time_constant=3, drug_concentration=0.1
+                 time_constant=3, drug_concentration=0.1,
+                 max_proliferation_potential=20,
                  ) -> None:
         self.name = name
 
@@ -25,6 +26,7 @@ class Variables:
 
         self.ics = ics
         self.max_immune_cell_count = max_immune_cell_count
+        self.max_proliferation_potential = max_proliferation_potential
 
         self.ap = ap
         self.bn = bn
@@ -102,6 +104,14 @@ class Variables:
         if days_from_start % self.injection_interval == 0 and self.time % 24 == 0:
             return True
         return False
+
+    @property
+    def days_from_injection(self) -> int:
+        """Return number of days from last injection""" 
+        if self.is_injection_start:
+            return 0
+        return self.days_elapsed - self.treatment_start_time - (self.injection_number - 1) * self.injection_interval
+
 
 
 class ConfigFileException(Exception):

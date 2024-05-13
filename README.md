@@ -25,17 +25,30 @@ We implemented cancer development and chemotherapy impact simulation using **sto
 
 ## Instalation
 To use app you must clone it from git repo and install requirements. Preferrable version Python3.12
+
 ```
 git clone https://github.com/Zhukowych/CancerSimulation.git
 cd CancerSimulation
 pip install -r requirements
 ```
 
+or 
+
+```
+$ pip install cancer-simulation
+```
+if you use pip to install app, check warnings on installation. On Linux-based OS
+pip installs scripts to ~/.local/bin/, so this folder should be in the PATH variable
+
 ## Usage
 
 To run app you must use the following bash command
 ```
-python csimulation.py config.yaml
+$ python csimulation.py config.yaml
+```
+or, if you installed from pip
+```bash
+$ csim config.yaml
 ```
 providing config.yaml file, which structure will be discussed further in the part [Config file](#config-file). TO start simulation press "s" key.
 
