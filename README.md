@@ -131,7 +131,7 @@ Drug can kill RTC, QC, IC with different probabilities:
 
 $$F_i(g) = l_i\times PK\times e^{-c_i(t - n_d\tau)}$$
 
-$$l_i=\frac{l_i\times g}{y'_i\times n_d+1}$$
+$$l_i=\frac{k_i\times g}{y'_i\times n_d+1}$$
 
 $$y'_i = \theta\times y_i$$ 
 
