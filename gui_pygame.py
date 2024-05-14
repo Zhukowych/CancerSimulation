@@ -4,6 +4,7 @@ Super pygame visualisation with multiprocessing backed up with rust, C and C++ a
 
 from multiprocessing import Process, Queue, Value
 import sys
+import os
 import pygame
 import pygame_chart as pyc
 
@@ -48,11 +49,16 @@ class Simulation:
     """
     Class
     """
+    frame_number = 0
+    simulation_number = 1
 
     def __init__(self, x: int, y: int, name="Unnamed"):
         """
         init func
         """
+        self.simulation_number = Simulation.simulation_number
+        Simulation.simulation_number += 1
+
         self.counter = None
 
         self.x = x
@@ -66,7 +72,7 @@ class Simulation:
 
     def draw(self):
         """
-        draws sells
+        draws cells
         """
         if self.queue.empty() or not running_sim.value:
             return
@@ -102,10 +108,27 @@ class Simulation:
             self.name, self.x, self.y + GRID_SIZE[1] + 2, font_size=BETWEEN_IND[1] // 2
         )
 
-        # screen.blit(
-        # text_font.render(f"D: {days} days", False, (0, 0, 0)),
-        # (self.x, self.y + GRID_SIZE[1] + 2),
-        # )
+    # Capture screenshots into given folder
+    def capture_screenshots(self, filepath: str):
+        """
+        Create a video from the screenshots.
+        """
+        if os.path.exists(filepath):
+            capture_rect = pygame.Rect(self.x, self.y, (GRID_SIZE[0] if not GRID_SIZE[0]%2 else GRID_SIZE[0]+1), (GRID_SIZE[1] if not GRID_SIZE[1]%2 else GRID_SIZE[1]+1))
+            subsurface = screen.subsurface(capture_rect)
+            pygame.image.save(subsurface, f'{filepath}/Simulation{self.simulation_number}_{self.frame_number:05d}.png')
+            self.frame_number += 1
+
+    # Delete all screenshots in the given folder (deletes all .png files!)
+    def delete_screenshots(self, filepath: str):
+        """
+        Delete all screenshots from past simulations.
+        """
+        if os.path.exists(filepath):
+            for filename in os.listdir(filepath):
+                file_path = os.path.join(filepath, filename)
+                if (os.path.isfile(file_path) or os.path.islink(file_path)) and filename.endswith('.png'):
+                    os.unlink(file_path)
 
 
 class Chart:
