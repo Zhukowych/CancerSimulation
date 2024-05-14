@@ -81,6 +81,7 @@ class FiniteAutomaton:
 
         self.edge_cells = edge_cells
 
+        self.variables.time_step()
         self.process_chemotherapy()
         self.spawn_immune_cells()
 
@@ -91,10 +92,14 @@ class FiniteAutomaton:
 
     def spawn_immune_cells(self):
         """Spawn immune cells on the grid"""
-        recrutient = (
-            2 * self.counter.immune_cell * self.counter.tumor_cell / (10**3 + self.counter.tumor_cell)
-        )
-        if self.counter.immune_cell >= self.variables.max_immune_cell_count:
+        if not self.variables.immune_response:
+            return
+
+        needed_immune_cells = self.variables.ics * self.counter.tumor_cell
+
+        recrutient = needed_immune_cells - self.counter.immune_cell
+
+        if recrutient < 0:
             return
 
         for _ in range(int(recrutient)):

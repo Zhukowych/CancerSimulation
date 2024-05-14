@@ -2,9 +2,9 @@ from setuptools import setup, find_packages
 
 setup(
     name="cancer_simulation",
-    version='0.7.2',
+    version='0.7.3',
     packages=find_packages(),
-    short_description="A simple cancer and chemotherapy simulation",
+    description="A simple cancer and chemotherapy simulation",
     long_description="""We implemented cancer development and chemotherapy impact simulation using
                    stochastic cellular automaton with Python. The main feature of implemented 
                    app is capability of simulating different treatment strategies under same-

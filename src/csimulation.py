@@ -364,7 +364,8 @@ def step_calculator(variables, queue, active, start_x, start_y):
 
     automaton = FiniteAutomaton(Grid(GRID_SIZE[1], GRID_SIZE[0]), variables)
     automaton.grid.place_entity(TrueStemCell(proliferation_potential=variables.max_proliferation_potential), start_x, start_y)
-    automaton.grid.place_entity(ImmuneCell(), 1, 1)
+    if variables.immune_response:
+        automaton.grid.place_entity(ImmuneCell(), 1, 1)
     while True:
 
         if queue.empty() and active.value:

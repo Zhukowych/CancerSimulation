@@ -2,15 +2,9 @@
 import math
 import numpy as np
 from random import random, choice
-from .variables import Variables
+from .variables import Variables, LOW_PROLIFERATION_COLOR, MAX_PROLIFERATION_COLOR
 from .cell import Cell
 
-
-MAX_PROLIFERATION_POTENTIAL = 50
-MAX_PROLIFERATION_COLOR = np.array([250,0,0])
-LOW_PROLIFERATION_COLOR = np.array([0, 0, 0])
-
-DELTA = ( MAX_PROLIFERATION_COLOR - LOW_PROLIFERATION_COLOR ) / MAX_PROLIFERATION_POTENTIAL
 
 
 def get_chemo_death_probability(theta, k, y, variables: Variables) -> float:
@@ -60,7 +54,7 @@ class BiologicalCell(Entity):
 
     __dict__ = ["ID", "proliferation_potential", "cell", "neighbors", "free_neighbors", "variables"]
 
-    def __init__(self, *args, proliferation_potential=MAX_PROLIFERATION_POTENTIAL, **kwargs) -> None:
+    def __init__(self, *args, proliferation_potential=None, **kwargs) -> None:
         """Initialize Biological cell"""
         super().__init__(*args, **kwargs)
 
@@ -79,12 +73,10 @@ class BiologicalCell(Entity):
 
     def process_chemotherapy(self, theta: float, death: float) -> None:
         """Process the effect of the chemotherapy"""
-
         if not self.variables.is_treatment:
             return
 
         chemo_death_probability = self.get_chemo_death_probability(theta=theta)
-        print(chemo_death_probability)
         if death <= chemo_death_probability:
             self.apotose()
 
@@ -167,7 +159,10 @@ class CancerCell(BiologicalCell):
 
     @property
     def color(self) -> tuple[int, int, int]:
-        r, g, b =  LOW_PROLIFERATION_COLOR + self.proliferation_potential * DELTA
+        if not self.variables:
+            r, g, b = MAX_PROLIFERATION_COLOR
+        else:
+            r, g, b =  LOW_PROLIFERATION_COLOR + self.proliferation_potential * self.variables.color_delta
         return int(r), int(g), int(b)
 
 
@@ -206,7 +201,7 @@ class TrueStemCell(CancerCell):
     True Stem cell.
     Cell that is immortal and can give birth to either
     RTC or other True stem cell
-    """
+    """     
 
     ID = 3
 
@@ -266,19 +261,14 @@ class ImmuneCell(BiologicalCell):
     def move_to_random(self, direction_probability) -> None:
         """Move to random free neighbor"""
 
-        if direction_probability <= self.variables.ics:
-            free_neighbor = sorted(self.free_neighbors, key=lambda c: c.distance)[:3]
-        else:
-            free_neighbor = sorted(self.free_neighbors, key=lambda c: c.distance)
-
         if not self.cell.entity: # cell has died
             return
 
-        if not free_neighbor:
+        if not self.free_neighbors:
             return
 
-        cell = choice(free_neighbor)
-        self.move_to(cell)
+        cell = choice(self.free_neighbors)
+        self.move_to(cell)   
 
     @property
     def color(self):

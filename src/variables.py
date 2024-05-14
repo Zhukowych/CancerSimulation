@@ -1,5 +1,11 @@
 """Variables"""
 import yaml
+import numpy as np
+
+
+MAX_PROLIFERATION_COLOR = np.array([250,0,0])
+LOW_PROLIFERATION_COLOR = np.array([0, 0, 0])
+
 
 class Variables:
     """Variables"""
@@ -9,7 +15,8 @@ class Variables:
                  p0=0.7, pA=0, pS=0.1, ap=0.42, bn=0.53,
                  Kc=10, Rmax=100, pdT=0.5, pdI=0.5,
                  yPC=0.55, yQ=0.4, yI=0.7, kPC=0.8, mu=0.4, ics=0.4,
-                 max_immune_cell_count=2000,
+                 max_immune_cell_count=2000, immune_response=True,
+                 treatment=True,
                  kQ=0.4, kI=0.6, ci=0.5, PK=1, max_energy_level=30,
                  necrotic_distance=30, quiescent_distance=30,
                  treatment_start_time=10, injection_interval=10,
@@ -24,6 +31,7 @@ class Variables:
         self.pS = pS
         self.mu = mu
 
+        self.immune_response = immune_response
         self.ics = ics
         self.max_immune_cell_count = max_immune_cell_count
         self.max_proliferation_potential = max_proliferation_potential
@@ -34,6 +42,7 @@ class Variables:
         self.Kc = Kc
         self.Rmax = Rmax
 
+        self.treatment = treatment
         self.pdT = pdT
         self.pdI = pdI
 
@@ -57,9 +66,12 @@ class Variables:
 
         # Dynamic variables
         self.Rt = 0
+        self.tumor_center = (0, 0)
         self.injection_number = 0
         self.time_delta = 5
         self.time = 0
+
+        self.color_delta = ( MAX_PROLIFERATION_COLOR - LOW_PROLIFERATION_COLOR ) / self.max_proliferation_potential
 
     @property
     def Wp(self) -> float:
@@ -80,6 +92,8 @@ class Variables:
     def is_treatment(self) -> bool:
         """Return true if chemotherapy injection is in process"""
 
+        if not self.treatment:
+            return False
         # Treatment has not started yet
         if self.days_elapsed < self.treatment_start_time:
             return False

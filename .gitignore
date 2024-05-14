@@ -1,3 +1,6 @@
 __pycache__/
 .env/
 *.yaml
+build/
+dist/
+cancer_simulation.egg-info
