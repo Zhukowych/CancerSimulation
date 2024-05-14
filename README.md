@@ -125,7 +125,7 @@ $$br = p_0 \left(1 - \frac{r}{R_{max} - K_c}\right) $$
 Firstly, we must make several assumptions:
 - Cancer cells can be divided into two types: drug-resistant cells (SC) and drug-sensitive cells (RTC). 
 - Drug is evenly distributed among all cells
-- We can affect tumor growth via reducing probability of proliferation, increasing probability of cell death and decreasing $K_c$
+- We can affect tumor growth via reducing increasing probability of cell death and decreasing $K_c$
 
 Drug can kill RTC, QC, IC with different probabilities:
 
@@ -138,9 +138,6 @@ $$y'_i = \theta\times y_i$$
 $$ 0< \theta \leq1$$
 
 where i can be (RTC, QC, IC) and $g$ is the drug concentration at each cell. Also therapy affects proliferation potential
-
-$$p_0' = \frac{p_0\times y_{PC}}{n_d^{1/n_{dead}}}$$
-
 Therapy is applied from $t_{ap}$ day with $t_{per}$ intervals and drug concentration remain the same during $\tau$ days after the injection
 
 In summary, relation between the states can be expressed as automaton diagram:
