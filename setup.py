@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="cancer_simulation",
-    version='0.7.3',
+    version='0.7.4',
     packages=find_packages(),
     description="A simple cancer and chemotherapy simulation",
     long_description="""We implemented cancer development and chemotherapy impact simulation using

@@ -1,11 +1,12 @@
 """
 Super pygame visualisation with multiprocessing backed up with rust, C and C++ at the same time.
 """
-
+import os
 from multiprocessing import Process, Queue, Value, Event
 import pygame
 import pygame_chart as pyc
 
+from pathlib import Path
 import pygame
 import argparse
 from .automaton import FiniteAutomaton
@@ -60,11 +61,13 @@ class Simulation:
         self.name = name
 
         self.queue = Queue()
+        self.variables = None
 
         self.x += 1
         self.y += 1
 
         self.days = 0
+
 
     def draw(self):
         """
@@ -97,6 +100,29 @@ class Simulation:
         render_text(
             self.name, self.x, self.y + GRID_SIZE[1] + 2, font_size=int(BETWEEN_IND[1] // 1.6)
         )
+
+    # Capture screenshots into given folder
+    def capture_screenshots(self, filepath: str):
+        """
+        Create a video from the screenshots.
+        """
+        Path(filepath).mkdir(parents=True, exist_ok=True)
+        if os.path.exists(filepath) and self.days % 10 == 0:
+            capture_rect = pygame.Rect(self.x, self.y, (GRID_SIZE[0] if not GRID_SIZE[0]%2 else GRID_SIZE[0]+1),
+                                                       (GRID_SIZE[1] if not GRID_SIZE[1]%2 else GRID_SIZE[1]+1))
+            subsurface = screen.subsurface(capture_rect)
+            pygame.image.save(subsurface, f'{filepath}/{self.name}_day_{self.days:05d}.png')
+
+    # Delete all screenshots in the given folder (deletes all .png files!)
+    def delete_screenshots(self, filepath: str):
+        """
+        Delete all screenshots from past simulations.
+        """
+        if os.path.exists(filepath):
+            for filename in os.listdir(filepath):
+                file_path = os.path.join(filepath, filename)
+                if (os.path.isfile(file_path) or os.path.islink(file_path)) and filename.endswith('.png'):
+                    os.unlink(file_path)
 
     @property
     def has_frames(self) -> bool:
@@ -443,6 +469,7 @@ def main():
         )
         new_process.start()
         processes.append(new_process)
+        simulation.delete_screenshots(os.path.join("capture/", simulation.name))
 
     prepare_board()
 
@@ -457,6 +484,7 @@ def main():
 
             for simulation in simulations:
                 simulation.draw()
+                simulation.capture_screenshots(os.path.join("capture/", simulation.name))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
