@@ -109,12 +109,10 @@ class Variables:
     @property
     def is_injection_start(self) -> bool:
         """Return true if it is a day of injection"""
-
         if not self.is_treatment:
             return False
 
         days_from_start = self.days_elapsed - self.treatment_start_time
-
         if days_from_start % self.injection_interval == 0 and self.time % 24 == 0:
             return True
         return False
@@ -125,7 +123,6 @@ class Variables:
         if self.is_injection_start:
             return 0
         return self.days_elapsed - self.treatment_start_time - (self.injection_number - 1) * self.injection_interval
-
 
 
 class ConfigFileException(Exception):

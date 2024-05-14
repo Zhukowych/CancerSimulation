@@ -81,9 +81,9 @@ class FiniteAutomaton:
 
         self.edge_cells = edge_cells
 
-        self.variables.time_step()
         self.process_chemotherapy()
         self.spawn_immune_cells()
+        self.variables.time_step()
 
     def process_chemotherapy(self):
         """Process effect of chemotherapy on cell"""
